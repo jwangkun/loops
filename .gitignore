@@ -1,0 +1,17 @@
+# IDE / Agent 本地配置
+.trae/
+.cursor/
+.cursorrules
+.windsurf/
+.cline/
+
+# 依赖和构建产物
+node_modules/
+dist/
+build/
+__pycache__/
+*.pyc
+
+# 日志和临时文件
+*.log
+.DS_Store

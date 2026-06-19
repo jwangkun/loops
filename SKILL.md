@@ -39,7 +39,7 @@ Loops 是一种用于 AI 编程助手（如 Claude Code、Cursor、Trae、Windsu
 
 ### 1.1 Claude Code 安装（推荐，全局可用）
 
-Claude Code 通过 `/load` 命令显式加载技能文件。只要 Loops 仓库在本地任意位置即可工作，推荐放在 `~/.loops`。
+Claude Code 通过 `--system-prompt` 启动参数加载 `SKILL.md` 作为系统提示词，整个会话都能识别 Loops。推荐把 Loops 放在 `~/.loops`。
 
 **全局安装**
 
@@ -47,24 +47,27 @@ Claude Code 通过 `/load` 命令显式加载技能文件。只要 Loops 仓库�
 # 1. 克隆 Loops 到全局位置
 git clone https://github.com/jwangkun/loops.git ~/.loops
 
-# 2. 启动 Claude Code
-claude
+# 2. 用 system prompt 启动 Claude Code
+claude --system-prompt ~/.loops/SKILL.md
 
-# 3. 加载 Skill（每个新会话第一次使用时执行）
-/load ~/.loops/SKILL.md
-
-# 4. 使用任意 Loop
+# 3. 使用任意 Loop
 /loop test-until-green
 ```
 
-**加载单个 Loop**
+**为单个 Loop 启动临时会话**
 
 ```bash
-/load ~/.loops/prompts/zh/test-until-green.md
-/loop test-until-green
+claude --system-prompt ~/.loops/prompts/zh/test-until-green.md
 ```
 
-> Claude Code 目前不支持启动时自动 `/load`，所以每个新会话第一次使用 Loop 前，请手动执行 `/load ~/.loops/SKILL.md`。
+**已在运行中的 Claude Code 会话**
+
+如果你已经启动了 `claude` 但没加 `--system-prompt`，可以直接把 `~/.loops/SKILL.md` 的内容粘贴进对话，然后继续使用 `/loop <name>`。
+
+```bash
+cat ~/.loops/SKILL.md | pbcopy
+# 在 Claude Code 中粘贴即可
+```
 
 ### 1.2 Trae IDE 安装（全局 Skill）
 
@@ -164,11 +167,10 @@ git submodule add https://github.com/jwangkun/loops.git .trae/skills/loops
 
 ### 2.1 Claude Code
 
-Claude Code 需要先 `/load ~/.loops/SKILL.md` 加载 Skill（每个新会话一次），然后：
+用 `--system-prompt` 启动，或在对话中粘贴 `~/.loops/SKILL.md` 内容：
 
 ```bash
-claude
-/load ~/.loops/SKILL.md
+claude --system-prompt ~/.loops/SKILL.md
 /loop test-until-green
 ```
 
@@ -688,7 +690,7 @@ git push origin feature/new-stuff
 
 **解决**：
 1. 确认 Skill 已正确安装到项目目录
-2. 尝试使用完整路径加载：`/load ~/.loops/SKILL.md`
+2. Claude Code 用户确认是用 `claude --system-prompt ~/.loops/SKILL.md` 启动，或已粘贴 SKILL.md 内容到对话
 3. 用自然语言描述意图，例如："请按照 test-until-green 的模式运行测试并修复"
 
 ### 8.2 检查命令不存在

@@ -111,16 +111,13 @@ Claude Code 对 Loop 的支持最直接：加载 `SKILL.md` 后即可使用 `/lo
 git clone https://github.com/jwangkun/loops.git ~/.loops
 ```
 
-### 第 2 步：在 Claude Code 中加载并调用
+### 第 2 步：用 Claude Code 加载并调用
 
 ```bash
-# 启动 Claude Code
-claude
+# 用 system prompt 启动 Claude Code
+claude --system-prompt ~/.loops/SKILL.md
 
-# 加载 Skill（每次新会话执行一次即可）
-/load ~/.loops/SKILL.md
-
-# 使用任意 Loop
+# 在 Claude Code 中使用任意 Loop
 /loop test-until-green
 ```
 
@@ -145,30 +142,33 @@ AI 会告诉你每一步的操作结果，你只需在必要时介入。
 
 ### 4.1 Claude Code（推荐，全局可用）
 
-Claude Code 通过 `/load` 命令显式加载技能文件，因此 Loops 放在哪里都可以。推荐放在 `~/.loops`。
+Claude Code 通过 `--system-prompt` 启动参数加载 `SKILL.md` 作为系统提示词，这样整个会话都能识别 Loops。推荐把 Loops 放在 `~/.loops`。
 
 ```bash
 # 1. 克隆到全局位置
 git clone https://github.com/jwangkun/loops.git ~/.loops
 
-# 2. 启动 Claude Code 并加载 Skill
-claude
-/load ~/.loops/SKILL.md
+# 2. 用 system prompt 启动 Claude Code
+claude --system-prompt ~/.loops/SKILL.md
 
-# 3. 使用 Loop
+# 3. 在 Claude Code 中使用 Loop
 /loop test-until-green
 ```
 
-**让 Claude Code 每次自动加载（可选）**
-
-把下面这行加入你的 shell 配置文件（如 `~/.zshrc`），这样每次启动 Claude Code 都会自动加载：
+**为单个 Loop 启动临时会话**
 
 ```bash
-# 不推荐直接自动执行 /load，Claude Code 暂不支持启动脚本自动加载
-# 建议每次会话手动执行 /load ~/.loops/SKILL.md
+claude --system-prompt ~/.loops/prompts/zh/test-until-green.md
 ```
 
-> 目前 Claude Code 不支持启动时自动执行 `/load`，所以每个新会话第一次使用 Loop 前，请手动 `/load ~/.loops/SKILL.md`。
+**已在运行中的 Claude Code 会话**
+
+如果你已经启动了 `claude` 但没加 `--system-prompt`，可以直接把 `~/.loops/SKILL.md` 的内容粘贴进对话，然后继续使用 `/loop <name>`。
+
+```bash
+cat ~/.loops/SKILL.md | pbcopy
+# 在 Claude Code 中粘贴即可
+```
 
 ### 4.2 Trae IDE（全局 Skill）
 
@@ -283,10 +283,10 @@ git submodule add https://github.com/jwangkun/loops.git .trae/skills/loops
 
 ### 5.2 Claude Code
 
-Claude Code 需要先 `/load ~/.loops/SKILL.md` 加载 Skill（每个新会话一次）：
+Claude Code 需要用 `--system-prompt` 启动，或在对话中粘贴 `~/.loops/SKILL.md` 内容：
 
 ```bash
-/load ~/.loops/SKILL.md
+claude --system-prompt ~/.loops/SKILL.md
 /loop fix-ci-until-green
 ```
 
@@ -833,7 +833,7 @@ unzip loops.zip
 ### Q1: Agent 不识别 `/loop` 命令怎么办？
 
 A1: 尝试以下方法：
-1. 确认 Skill 已正确安装（Claude Code 需先 `/load ~/.loops/SKILL.md`）
+1. 确认 Skill 已正确安装（Claude Code 需用 `claude --system-prompt ~/.loops/SKILL.md` 启动）
 2. Trae 用户检查 `~/.trae/skills/loops/` 是否存在 `SKILL.md` 和 `prompts/`
 3. Cursor 用户检查 `~/.cursorrules` 是否已配置
 4. 用自然语言描述需求，让 AI 自动匹配 Loop

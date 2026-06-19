@@ -100,34 +100,36 @@
 
 ---
 
-## 3. 一分钟快速开始
+## 3. 一分钟快速开始（Claude Code 全局安装）
 
-### 第 1 步：安装 Skill
+Claude Code 对 Loop 的支持最直接：加载 `SKILL.md` 后即可使用 `/loop` 调用。
+
+### 第 1 步：全局安装 Loops
 
 ```bash
-# 进入你的项目根目录
-cd your-project
-
-# 将 Loops Skill 复制到项目中
-mkdir -p .trae/skills/loops
-cp /path/to/loops/SKILL.md .trae/skills/loops/
-cp -r /path/to/loops/prompts .trae/skills/loops/
+# 克隆到用户主目录下的全局位置
+git clone https://github.com/jwangkun/loops.git ~/.loops
 ```
 
-### 第 2 步：在 AI 助手中调用
+### 第 2 步：在 Claude Code 中加载并调用
 
-打开你的 AI 编程助手，输入：
+```bash
+# 启动 Claude Code
+claude
 
-```
+# 加载 Skill（每次新会话执行一次即可）
+/load ~/.loops/SKILL.md
+
+# 使用任意 Loop
 /loop test-until-green
 ```
 
 AI 会自动执行：
-1. 运行 `npm test`
-2. 找到失败的测试
+1. 运行检查命令（如 `npm test`）
+2. 找到失败或不足
 3. 修复最小根因
-4. 重新运行测试
-5. 重复直到测试全部通过
+4. 重新运行检查
+5. 重复直到目标达成
 
 ### 第 3 步：查看效果
 
@@ -135,45 +137,78 @@ AI 会告诉你每一步的操作结果，你只需在必要时介入。
 
 ---
 
-## 4. 安装 Skill
+## 4. 安装 Skill（默认全局安装）
 
-### 4.1 Trae IDE
+> **推荐原则**：先把 Loops 装到全局位置，这样所有项目都能调用；只有需要项目隔离时，才按项目安装。
+>
+> 全局安装路径建议：`~/.loops`（Claude Code）、`~/.trae/skills/loops`（Trae）。
 
-Trae 支持基于 `.trae/skills/` 目录结构自动识别 Skill。
+### 4.1 Claude Code（推荐，全局可用）
 
-**方式一：作为项目 Skill（推荐）**
+Claude Code 通过 `/load` 命令显式加载技能文件，因此 Loops 放在哪里都可以。推荐放在 `~/.loops`。
 
 ```bash
-# 在你的项目根目录执行
-cd your-project
-mkdir -p .trae/skills/loops
-cp /path/to/loops/SKILL.md .trae/skills/loops/
-cp -r /path/to/loops/prompts .trae/skills/loops/
+# 1. 克隆到全局位置
+git clone https://github.com/jwangkun/loops.git ~/.loops
+
+# 2. 启动 Claude Code 并加载 Skill
+claude
+/load ~/.loops/SKILL.md
+
+# 3. 使用 Loop
+/loop test-until-green
 ```
 
-**方式二：作为全局 Skill**
+**让 Claude Code 每次自动加载（可选）**
+
+把下面这行加入你的 shell 配置文件（如 `~/.zshrc`），这样每次启动 Claude Code 都会自动加载：
+
+```bash
+# 不推荐直接自动执行 /load，Claude Code 暂不支持启动脚本自动加载
+# 建议每次会话手动执行 /load ~/.loops/SKILL.md
+```
+
+> 目前 Claude Code 不支持启动时自动执行 `/load`，所以每个新会话第一次使用 Loop 前，请手动 `/load ~/.loops/SKILL.md`。
+
+### 4.2 Trae IDE（全局 Skill）
+
+Trae 支持基于 `.trae/skills/` 目录结构自动识别 Skill。全局路径为 `~/.trae/skills/loops/`。
 
 ```bash
 # macOS / Linux
 mkdir -p ~/.trae/skills/loops
-cp /path/to/loops/SKILL.md ~/.trae/skills/loops/
-cp -r /path/to/loops/prompts ~/.trae/skills/loops/
+cp ~/.loops/SKILL.md ~/.trae/skills/loops/
+cp -r ~/.loops/prompts ~/.trae/skills/loops/
 
 # Windows
 mkdir %USERPROFILE%\.trae\skills\loops
-copy /path/to/loops/SKILL.md %USERPROFILE%\.trae\skills\loops\
-xcopy /E /I /path/to/loops/prompts %USERPROFILE%\.trae\skills\loops\prompts
+copy %USERPROFILE%\.loops\SKILL.md %USERPROFILE%\.trae\skills\loops\
+xcopy /E /I %USERPROFILE%\.loops\prompts %USERPROFILE%\.trae\skills\loops\prompts
 ```
 
-### 4.2 Cursor
+安装后在 Trae 的 AI 对话框中输入：
 
-Cursor 通过 `.cursorrules` 文件集成：
+```
+/loop test-until-green
+```
+
+或：
+
+```
+@loops /loop test-until-green
+```
+
+> Trae 全局 Skill 的支持取决于版本，如果全局不生效，请改用下面的项目级安装。
+
+### 4.3 Cursor（全局 `.cursorrules`）
+
+Cursor 通过 `.cursorrules` 文件集成。把它放到用户主目录，即可对所有项目生效。
 
 ```bash
-# 在项目根目录创建 .cursorrules
-cat > .cursorrules << 'EOF'
+# 创建全局 .cursorrules
+cat > ~/.cursorrules << 'EOF'
 # Loops Skill 配置
-你是一名熟练使用 Loops 的 AI 开发助手。当用户要求自动化测试、CI修复、代码质量检查、内容创作、数据分析等任务时，请先查看 `prompts/zh/` 目录中的对应 Loop 提示词，然后按照 Loop 的"执行→检查→修复→重复"模式执行任务。
+你是一名熟练使用 Loops 的 AI 开发助手。当用户要求自动化测试、CI修复、代码质量检查、内容创作、数据分析、学习管理等任务时，请先查看 `~/.loops/prompts/zh/` 目录中的对应 Loop 提示词，然后按照 Loop 的"执行→检查→修复→重复"模式执行任务。
 
 常用 Loop：
 - 测试失败：/loop test-until-green
@@ -184,39 +219,52 @@ cat > .cursorrules << 'EOF'
 - 文档同步：/loop docs-sync-after-edits
 - 博客优化：/loop blog-post-until-publish
 - 数据清洗：/loop data-cleaning-loop
+- 会议纪要：/loop meeting-notes-cleaner
 EOF
 ```
 
-### 4.3 Claude Code
+> 请确保你已经执行过 `git clone https://github.com/jwangkun/loops.git ~/.loops`，否则 `~/.loops/prompts/zh/` 路径不存在。
 
-```bash
-# 启动 Claude Code
-claude
+### 4.4 Windsurf（项目级）
 
-# 加载 Loops Skill
-/load /path/to/loops/SKILL.md
-
-# 现在可以使用任意 Loop
-/loop test-until-green
-```
-
-### 4.4 Windsurf
+Windsurf 目前按项目加载 `docs`/`knowledge` 目录，需要在每个项目中复制一次：
 
 ```bash
 mkdir -p .windsurf/knowledge
-cp /path/to/loops/SKILL.md .windsurf/knowledge/loops.md
-cp /path/to/loops/prompts/zh/*.md .windsurf/knowledge/
+cp ~/.loops/SKILL.md .windsurf/knowledge/loops.md
+cp ~/.loops/prompts/zh/*.md .windsurf/knowledge/
 ```
 
-### 4.5 Cline
+然后在 Windsurf 中输入：
+
+```
+/loop test-until-green
+```
+
+### 4.5 Cline（项目级）
+
+Cline 同样按项目加载知识库文件：
 
 ```bash
 mkdir -p .cline
-cp /path/to/loops/SKILL.md .cline/loops.md
-cp /path/to/loops/prompts/zh/*.md .cline/
+cp ~/.loops/SKILL.md .cline/loops.md
+cp ~/.loops/prompts/zh/*.md .cline/
 ```
 
-### 4.6 通过 Git 子模块安装
+### 4.6 项目级安装（可选）
+
+如果你希望某个项目使用独立的 Loops 版本，可以按项目安装：
+
+```bash
+cd your-project
+mkdir -p .trae/skills/loops
+cp ~/.loops/SKILL.md .trae/skills/loops/
+cp -r ~/.loops/prompts .trae/skills/loops/
+```
+
+> `.trae/` 是本地 IDE 配置，不应提交到版本控制。建议将 `.trae/` 加入项目 `.gitignore`。
+
+### 4.7 通过 Git 子模块安装（可选）
 
 ```bash
 cd your-project
@@ -233,7 +281,16 @@ git submodule add https://github.com/jwangkun/loops.git .trae/skills/loops
 /loop <loop-name> [上下文参数]
 ```
 
-### 5.2 Trae
+### 5.2 Claude Code
+
+Claude Code 需要先 `/load ~/.loops/SKILL.md` 加载 Skill（每个新会话一次）：
+
+```bash
+/load ~/.loops/SKILL.md
+/loop fix-ci-until-green
+```
+
+### 5.3 Trae
 
 ```
 @loops /loop test-until-green
@@ -245,19 +302,13 @@ git submodule add https://github.com/jwangkun/loops.git .trae/skills/loops
 帮我运行 test-until-green，修复所有失败的测试
 ```
 
-### 5.3 Cursor
+### 5.4 Cursor
 
 ```
 运行 lint-typecheck-fix loop 清理代码
 ```
 
-Cursor 会读取 `.cursorrules` 中的配置并执行。
-
-### 5.4 Claude Code
-
-```bash
-/loop fix-ci-until-green
-```
+Cursor 会读取 `~/.cursorrules` 中的配置并执行。
 
 ### 5.5 自然语言调用
 
@@ -769,9 +820,9 @@ unzip loops.zip
 
 | AI 助手 | 支持情况 | 安装方式 |
 |--------|---------|---------|
+| Claude Code | 完全支持 | 见第 4 节 |
 | Trae | 完全支持 | 见第 4 节 |
 | Cursor | 完全支持 | 见第 4 节 |
-| Claude Code | 支持 | 见第 4 节 |
 | Windsurf | 支持 | 见第 4 节 |
 | Cline | 支持 | 见第 4 节 |
 
@@ -782,9 +833,10 @@ unzip loops.zip
 ### Q1: Agent 不识别 `/loop` 命令怎么办？
 
 A1: 尝试以下方法：
-1. 确认 Skill 已正确安装
-2. 使用 `/load /path/to/loops/SKILL.md` 手动加载
-3. 用自然语言描述需求，让 AI 自动匹配 Loop
+1. 确认 Skill 已正确安装（Claude Code 需先 `/load ~/.loops/SKILL.md`）
+2. Trae 用户检查 `~/.trae/skills/loops/` 是否存在 `SKILL.md` 和 `prompts/`
+3. Cursor 用户检查 `~/.cursorrules` 是否已配置
+4. 用自然语言描述需求，让 AI 自动匹配 Loop
 
 ### Q2: 检查命令不存在怎么办？
 

@@ -33,135 +33,188 @@ Loops 是一种用于 AI 编程助手（如 Claude Code、Cursor、Trae、Windsu
 
 ## 1. 安装 Skill
 
-### 1.1 Trae IDE 安装
+> **默认推荐全局安装**。先把 Loops 放到 `~/.loops`，这样所有项目、所有 Agent 都能引用。只有需要项目隔离时，才按项目安装。
+>
+> 不同 Agent 的全局安装方式不同，请按你使用的 Agent 选择对应小节。
 
-Trae 支持基于 `.trae/skills/` 目录结构自动识别 Skill。本仓库的 `SKILL.md` 和 `prompts/` 是 Skill 的核心内容，安装时复制到 `.trae/skills/loops/` 即可。
+### 1.1 Claude Code 安装（推荐，全局可用）
 
-**方式一：复制到项目 Skill 目录（推荐）**
+Claude Code 通过 `/load` 命令显式加载技能文件。只要 Loops 仓库在本地任意位置即可工作，推荐放在 `~/.loops`。
+
+**全局安装**
 
 ```bash
-# 在你的项目根目录执行
-cd your-project
-mkdir -p .trae/skills/loops
-cp /path/to/loops/SKILL.md .trae/skills/loops/
-cp -r /path/to/loops/prompts .trae/skills/loops/
+# 1. 克隆 Loops 到全局位置
+git clone https://github.com/jwangkun/loops.git ~/.loops
+
+# 2. 启动 Claude Code
+claude
+
+# 3. 加载 Skill（每个新会话第一次使用时执行）
+/load ~/.loops/SKILL.md
+
+# 4. 使用任意 Loop
+/loop test-until-green
 ```
 
-**方式二：使用子模块**
+**加载单个 Loop**
 
 ```bash
-cd your-project
-git submodule add https://github.com/jwangkun/loops.git .trae/skills/loops
+/load ~/.loops/prompts/zh/test-until-green.md
+/loop test-until-green
 ```
 
-> 注意：`.trae/` 目录是本地 IDE 配置，通常不应提交到版本控制。建议将 `.trae/` 加入 `.gitignore`。
+> Claude Code 目前不支持启动时自动 `/load`，所以每个新会话第一次使用 Loop 前，请手动执行 `/load ~/.loops/SKILL.md`。
 
-**方式三：复制到全局 Skill 目录**
+### 1.2 Trae IDE 安装（全局 Skill）
+
+Trae 支持基于 `.trae/skills/` 目录结构自动识别 Skill。全局路径为 `~/.trae/skills/loops/`。
 
 ```bash
-# macOS / Linux
+# 1. 确保 Loops 已在 ~/.loops
+git clone https://github.com/jwangkun/loops.git ~/.loops
+
+# 2. 复制到 Trae 全局 Skill 目录
 mkdir -p ~/.trae/skills/loops
-cp /path/to/loops/SKILL.md ~/.trae/skills/loops/
-cp -r /path/to/loops/prompts ~/.trae/skills/loops/
-
-# Windows
-mkdir %USERPROFILE%\.trae\skills\loops
-copy /path/to/loops/SKILL.md %USERPROFILE%\.trae\skills\loops\
-xcopy /E /I /path/to/loops/prompts %USERPROFILE%\.trae\skills\loops\prompts
+cp ~/.loops/SKILL.md ~/.trae/skills/loops/
+cp -r ~/.loops/prompts ~/.trae/skills/loops/
 ```
 
-### 1.2 Cursor 安装
+安装后在 Trae 的 AI 对话框中输入：
 
-Cursor 可以通过 `.cursorrules` 文件或 MCP 方式集成：
+```
+/loop test-until-green
+```
 
-**使用 .cursorrules 文件（推荐）**
+或：
 
-在项目根目录创建 `.cursorrules` 文件，内容如下：
+```
+@loops /loop test-until-green
+```
 
-```markdown
+> Trae 全局 Skill 的支持取决于版本。如果全局不生效，请改用下面的项目级安装。
+
+### 1.3 Cursor 安装（全局 `.cursorrules`）
+
+Cursor 通过 `.cursorrules` 文件集成。把它放到用户主目录，即可对所有项目生效。
+
+```bash
+# 创建全局 .cursorrules
+cat > ~/.cursorrules << 'EOF'
 # Loops Skill 配置
-你是一名熟练使用 Loops 的 AI 开发助手。当用户要求自动化测试、CI修复、代码质量检查、内容创作、数据分析等任务时，请先查看 `prompts/zh/` 目录中的对应 Loop 提示词，然后按照 Loop 的"执行→检查→修复→重复"模式执行任务。
+你是一名熟练使用 Loops 的 AI 开发助手。当用户要求自动化测试、CI修复、代码质量检查、内容创作、数据分析、学习管理等任务时，请先查看 `~/.loops/prompts/zh/` 目录中的对应 Loop 提示词，然后按照 Loop 的"执行→检查→修复→重复"模式执行任务。
 
 常用 Loop：
 - 测试失败：/loop test-until-green
 - CI修复：/loop fix-ci-until-green
 - 代码质量：/loop lint-typecheck-fix
 - PR审查：/loop pr-self-review
-- 数据清洗：/loop data-cleaning-loop
+- TDD开发：/loop autoloop-tdd
+- 文档同步：/loop docs-sync-after-edits
 - 博客优化：/loop blog-post-until-publish
+- 数据清洗：/loop data-cleaning-loop
 - 会议纪要：/loop meeting-notes-cleaner
+EOF
 ```
 
-### 1.3 Claude Code 安装
+> 请确保已经执行过 `git clone https://github.com/jwangkun/loops.git ~/.loops`，否则 `~/.loops/prompts/zh/` 路径不存在。
 
-Claude Code 支持通过 `/load` 命令加载技能文件：
+### 1.4 Windsurf / Cline 安装（项目级）
 
-```bash
-# 在 Claude Code 中
-/load /path/to/loops/SKILL.md
-
-# 或者直接加载单个 Loop
-/load /path/to/loops/prompts/zh/test-until-green.md
-```
-
-### 1.4 Windsurf / Cline 安装
-
-这些 Agent 通常支持通过 `docs` 或 `knowledge` 目录加载 Markdown 文件：
+Windsurf 和 Cline 目前按项目加载知识库文件，需要在每个项目中复制一次：
 
 ```bash
+# 先确保 Loops 在 ~/.loops
+git clone https://github.com/jwangkun/loops.git ~/.loops
+
 # Windsurf
 mkdir -p .windsurf/knowledge
-cp /path/to/loops/SKILL.md .windsurf/knowledge/loops.md
-cp /path/to/loops/prompts/zh/*.md .windsurf/knowledge/
+cp ~/.loops/SKILL.md .windsurf/knowledge/loops.md
+cp ~/.loops/prompts/zh/*.md .windsurf/knowledge/
 
 # Cline
 mkdir -p .cline
-cp /path/to/loops/SKILL.md .cline/loops.md
-cp /path/to/loops/prompts/zh/*.md .cline/
+cp ~/.loops/SKILL.md .cline/loops.md
+cp ~/.loops/prompts/zh/*.md .cline/
+```
+
+### 1.5 项目级安装（可选）
+
+如果你希望某个项目使用独立的 Loops 版本，可以按项目安装：
+
+```bash
+cd your-project
+mkdir -p .trae/skills/loops
+cp ~/.loops/SKILL.md .trae/skills/loops/
+cp -r ~/.loops/prompts .trae/skills/loops/
+```
+
+> `.trae/` 是本地 IDE 配置，不应提交到版本控制。建议将 `.trae/` 加入项目 `.gitignore`。
+
+### 1.6 通过 Git 子模块安装（可选）
+
+```bash
+cd your-project
+git submodule add https://github.com/jwangkun/loops.git .trae/skills/loops
 ```
 
 ---
 
 ## 2. 在 Agent 中使用
 
-### 2.1 Trae
+### 2.1 Claude Code
 
-在 Trae 的 AI 对话框中输入：
-
-```
-@loops /loop test-until-green
-```
-
-或更自然的中文指令：
-
-```
-帮我运行 /loop test-until-green，修复所有失败的测试
-```
-
-### 2.2 Cursor
-
-在 Cursor Composer 或 Chat 中：
-
-```
-运行 test-until-green loop 修复当前测试
-```
-
-Cursor 会读取 `.cursorrules` 中的 Loops 配置并执行。
-
-### 2.3 Claude Code
+Claude Code 需要先 `/load ~/.loops/SKILL.md` 加载 Skill（每个新会话一次），然后：
 
 ```bash
 claude
+/load ~/.loops/SKILL.md
 /loop test-until-green
 ```
 
-或加载 Skill 后使用自然语言：
+或加载后用自然语言：
 
 ```
 执行测试循环，修复失败的测试
 ```
 
-### 2.4 通用调用格式
+### 2.2 Trae
+
+Trae 会自动识别 `~/.trae/skills/loops/` 中的 Skill。在 AI 对话框中输入：
+
+```
+/loop test-until-green
+```
+
+或：
+
+```
+@loops /loop test-until-green
+```
+
+也可以直接用中文：
+
+```
+帮我运行 /loop test-until-green，修复所有失败的测试
+```
+
+### 2.3 Cursor
+
+Cursor 会读取全局 `~/.cursorrules` 中的 Loops 配置。在 Composer 或 Chat 中：
+
+```
+运行 test-until-green loop 修复当前测试
+```
+
+### 2.4 Windsurf / Cline
+
+Windsurf 和 Cline 按项目加载知识库。复制 `~/.loops` 中的文件到项目目录后，在 Chat 中输入：
+
+```
+/loop test-until-green
+```
+
+### 2.5 通用调用格式
 
 ```
 /loop <loop-name> [上下文参数]
@@ -635,7 +688,7 @@ git push origin feature/new-stuff
 
 **解决**：
 1. 确认 Skill 已正确安装到项目目录
-2. 尝试使用完整路径加载：`/load .trae/skills/loops/SKILL.md`
+2. 尝试使用完整路径加载：`/load ~/.loops/SKILL.md`
 3. 用自然语言描述意图，例如："请按照 test-until-green 的模式运行测试并修复"
 
 ### 8.2 检查命令不存在

@@ -1,17 +1,21 @@
 ---
 name: "type-definition-sync"
-description: "TypeScript类型与运行时API和数据库schema匹配"
+description: "类型与运行时及数据库一致"
 ---
 
 # 类型定义同步
 
-**分类:** 代码生成与重构  
-**标识符:** `type-definition-sync`  
+**分类:** 代码质量
+**标识符:** `type-definition-sync`
 **最大迭代次数:** 8
 
 ## 目标
 
-TypeScript类型与运行时API和数据库schema匹配
+让 TypeScript 类型与真实的运行时 API 响应及数据库 schema 完全一致，`tsc --noEmit` 干净通过，且不依赖 `as`/`@ts-ignore` 之类的强制转换或断言来消除错误。
+
+## 适用场景
+
+当 API 或数据库 schema 发生变更、运行时数据与类型定义出现漂移、或代码中堆积了大量类型断言时使用。
 
 ## 检查命令
 
@@ -21,12 +25,33 @@ npx tsc --noEmit
 
 ## 退出条件
 
-typecheck通过且无强制类型转换
+- `npx tsc --noEmit` 退出码为 0。
+- 不再出现 `as`、`@ts-ignore`、`any` 等用于绕过类型错误的新增断言（原有合理断言除外，需逐条说明）。
+- 类型来源（手写接口 / 生成类型 / ORM 实体）与运行时数据一致。
+- 达到 8 次仍未通过时停止并汇报。
 
 ## 执行步骤
 
-Step 1: 找到不匹配的type。更新定义。运行typecheck。重复。
+Step 1: 运行 `npx tsc --noEmit`，捕获全部类型错误及所在文件/行号。
+Step 2: 对照运行时（API 实际返回、DB schema/migration、ORM 实体）定位漂移点，判定是"类型落后于运行时"还是"运行时落后于类型"。
+Step 3: 应用最小修正：更新类型定义以匹配运行时事实；若类型由生成器产出，改源头 schema 再重新生成，而非手改生成文件。
+Step 4: 重新运行 `npx tsc --noEmit`；若仍有错误且未达 8 次，回到 Step 2。
+Step 5: 达到 8 次仍未通过，停止并列出剩余类型错误及根因（如 schema 缺字段、API 未迁移）。
+
+## 常见陷阱
+
+- 用 `as`/`@ts-ignore` 把类型错误压平，制造"通过"的假象。
+- 直接手改生成器产出的类型文件，下次生成又被覆盖。
+- 只让 tsc 通过却未核对运行时真实字段，类型与数据仍不一致。
+- 删除看似无用的可选字段，实则破坏了下游消费者。
+
+## 注意事项
+
+- 修正方向以运行时事实为准：类型应追随数据，而非数据迁就类型。
+- 区分手写类型与生成类型；生成类型必须从源头重新生成。
+- 不得为通过编译而放宽为 `any` 或 `unknown` 后置之不理。
+- schema/接口属跨模块契约，改动需同步通知调用方并更新文档。
 
 ## 推荐代理
 
-Claude Code、Cursor、Trae
+Claude Code、Cursor、Trae、Windsurf、Cline

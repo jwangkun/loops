@@ -1,17 +1,21 @@
 ---
 name: "openapi-sync-until-valid"
-description: "openapi.yaml lint干净且与实现的路由匹配"
+description: "openapi规范干净且与路由一致"
 ---
 
-# OpenAPI同步
+# OpenAPI同步校验循环
 
-**分类:** API/规范  
-**标识符:** `openapi-sync-until-valid`  
+**分类:** API/规范
+**标识符:** `openapi-sync-until-valid`
 **最大迭代次数:** 10
 
 ## 目标
 
-openapi.yaml lint干净且与实现的路由匹配
+让 `openapi.yaml` 既通过 lint 校验（无语法/结构错误），又与代码中实际实现的路由、方法、参数完全一致。文档不再存在孤立路由或漂移字段。
+
+## 适用场景
+
+当新增、重命名或删除了 API 路由，或修改了请求/响应结构后，需要把 OpenAPI 规范同步到最新实现时使用。也适用于上线前的规范一致性检查。
 
 ## 检查命令
 
@@ -21,12 +25,32 @@ npx @redocly/cli lint openapi.yaml
 
 ## 退出条件
 
-openapi lint退出码为0
+- `npx @redocly/cli lint openapi.yaml` 退出码为 0。
+- 规范中无 lint 错误或警告。
+- 代码中的每个路由都在规范中有对应定义，规范中无未实现的路由。
 
 ## 执行步骤
 
-Step 1: Lint openapi.yaml。修复spec错误和处理程序漂移。
+Step 1: 运行 `npx @redocly/cli lint openapi.yaml`，记录所有报错与警告（缺失字段、错误类型、重复 operationId、未引用的 $ref 等）。
+Step 2: 对比规范与路由注册代码，找出规范中缺失的路由、已删除但仍在文档中的孤立路由、以及参数/响应漂移。
+Step 3: 用最小改动修复：补齐缺失的 path 与 operation、修正 schema 引用、删除孤立条目；不要靠禁用 lint 规则来掩盖问题。
+Step 4: 重新运行检查命令；若仍失败且未达最大迭代次数，回到 Step 2。
+Step 5: 达到最大迭代次数仍未通过时停止，汇报剩余的 lint 错误与不一致路由，不要无限循环。
+
+## 常见陷阱
+
+- 只修 lint 报错却忽略规范与实现路由之间的漂移。
+- 规范中存在已删除的孤立路由，造成"幽灵接口"。
+- 复制粘贴 operation 导致重复 operationId。
+- 用禁用规则的方式绕过警告而非真正修复。
+
+## 注意事项
+
+- 规范与代码必须双向一致：既不能多也不能少。
+- 修改响应 schema 时同步更新示例与错误码。
+- 路由迁移时先更新规范再迁移代码，避免长期漂移。
+- 不要为了让 lint 通过而删除合法的路由定义。
 
 ## 推荐代理
 
-Claude Code、Cursor、Trae
+Claude Code、Cursor、Trae、Windsurf、Cline

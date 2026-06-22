@@ -1,17 +1,19 @@
 ---
 name: "lint-typecheck-fix"
-description: "lint和typecheck干净"
+description: "lint与类型检查零报错"
 ---
 
-# Lint和Typecheck修复
+# Lint 与类型检查修复
 
 **分类:** 代码质量  
 **标识符:** `lint-typecheck-fix`  
 **最大迭代次数:** 5
 
 ## 目标
+让 lint 与类型检查全部通过，退出码为 0，不遗留任何告警或错误。所有报告的问题都用最小、针对性的 diff 修复，而非压制规则或绕过类型系统。成功即代码达到可合并的干净状态。
 
-lint和typecheck干净
+## 适用场景
+在代码变更合并或提交前使用，尤其是新增/修改了类型、或触发了 lint 规则告警时。
 
 ## 检查命令
 
@@ -20,13 +22,24 @@ npm run lint && npx tsc --noEmit
 ```
 
 ## 退出条件
-
-lint和typecheck退出码为0
+- `npm run lint` 与 `npx tsc --noEmit` 均退出码 0
+- 无新告警、错误或类型错误残留
 
 ## 执行步骤
+Step 1: 运行检查，完整捕获输出（按文件/规则分组的错误列表）。
+Step 2: 逐条分析失败：区分 lint 风格问题、潜在 bug 告警与类型错误；定位每个报错的根因而非表象。
+Step 3: 用最小 diff 修复代码本身，绝不通过 `eslint-disable`、`@ts-ignore`、放宽规则或 `any` 来掩盖。
+Step 4: 重新运行检查；若仍失败且未达最大迭代次数，回到 Step 2。
+Step 5: 达到最大迭代仍未通过则停止，报告剩余阻塞项（文件、规则、报错摘要），不要无限循环。
 
-Step 1: 运行lint和typecheck。用最小diff修复报告的问题。
+## 常见陷阱
+- 用 `eslint-disable`、`@ts-ignore`、`as any` 压制告警来强行通过，掩盖了真实问题。
+- 修一处类型错误会触发下游文件的连锁报错，必须重新运行确认全绿。
+- 误把既有 baseline 告警当作本次引入的问题，扩大 diff 改动历史代码。
+
+## 注意事项
+- 仅修改本次变更相关文件，避免顺手重格式化无关代码。
+- 若某规则本身不合理，记录下来单独讨论，而非在本循环内改动配置。
 
 ## 推荐代理
-
-Claude Code、Cursor、Trae
+Claude Code、Cursor、Trae、Windsurf、Cline

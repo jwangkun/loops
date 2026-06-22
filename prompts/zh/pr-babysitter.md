@@ -1,17 +1,21 @@
 ---
 name: "pr-babysitter"
-description: "标记为codex-watch的PR保持健康"
+description: "守护codex-watch标签PR保持健康"
 ---
 
 # PR保姆
 
-**分类:** 持续集成/持续部署  
-**标识符:** `pr-babysitter`  
+**分类:** 持续集成/持续部署
+**标识符:** `pr-babysitter`
 **最大迭代次数:** 10
 
 ## 目标
 
-标记为codex-watch的PR保持健康
+持续照看带有 `codex-watch` 标签的 PR，使其保持健康、可合并状态：CI 失败被修复、与目标分支冲突的陈旧 PR 被 rebase、无进展的 PR 留下清晰评论，确保没有 PR 因可解决的问题而停滞。
+
+## 适用场景
+
+适合同时维护多个待合并 PR，需要定期巡检 CI 状态、处理冲突并催促进度的场景。
 
 ## 检查命令
 
@@ -21,12 +25,31 @@ gh pr list --label "codex-watch"
 
 ## 退出条件
 
-无阻塞CI失败
+- 所有 `codex-watch` PR 中没有阻塞型 CI 失败。
+- 无 PR 因陈旧（conflict/stale base）而处于不可合并状态，或已留下明确的处理评论。
 
 ## 执行步骤
 
-Step 1: 列出监控的PR。修复CI。rebase过期的PR。评论过期项。
+Step 1: 运行检查命令，列出所有 `codex-watch` PR，并为每个 PR 获取状态：CI 结论、是否可合并（mergeable）、与目标分支的落后/领先情况。
+Step 2: 对每个 PR 分类处理：CI 失败、与 base 冲突、落后于 base 但可 rebase、或长期无评审进展。
+Step 3: 针对可安全处理的问题做最小修复：修复本 PR 引入的真实 CI 失败、对冲突/陈旧 PR 执行 rebase 后推送；禁止越权改写他人未评审的核心提交。
+Step 4: 对无法自动解决的问题（等待人工评审、需要决策）在 PR 上留下清晰评论说明现状与下一步，然后回到 Step 1 重新检查。
+Step 5: 若达到最大迭代次数仍有未解决阻塞，停止并报告：每个剩余 PR 的状态、阻塞原因与已采取动作，不要无限循环。
+
+## 常见陷阱
+
+- 把上游 main 或 flaky 测试导致的 CI 失败误归到被守护的 PR 上并改其代码。
+- rebase 陈旧 PR 时引入冲突却没本地验证，推送后反而让 CI 变红。
+- 一次性处理多个 PR 的大改动，造成难以评审和回滚。
+- 忘记对"需人工介入"的 PR 留评论，导致它继续无声停滞。
+
+## 注意事项
+
+- 只处理 `codex-watch` 标签范围内的 PR，不主动改动未被监控的 PR。
+- 修复 CI 必须针对根因，禁止跳过测试或放宽校验制造虚假绿色。
+- rebase 前务必本地跑相关检查，确认未引入新的失败或冲突。
+- 改动他人 PR 时保持最小且聚焦，不擅自改变其意图或合并策略。
 
 ## 推荐代理
 
-Claude Code、Cursor、Trae
+Claude Code、Cursor、Trae、Windsurf、Cline

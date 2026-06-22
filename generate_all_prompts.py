@@ -2,9 +2,25 @@
 """
 Generate all 100 Loop prompt files in Chinese and English.
 This script defines all Loop metadata and generates individual markdown files.
+
+⚠️  WARNING — DO NOT RUN BLINDLY  ⚠️
+=====================================
+The files in prompts/zh/ and prompts/en/ have been HAND-ENHANCED to the full
+8-section structure (目标 / 适用场景 / 检查命令 / 退出条件 / 执行步骤 / 常见陷阱 /
+注意事项 / 推荐代理). The templates below only generate the OLD 5-section minimal
+structure.
+
+Running `main()` will WIPE prompts/en/ and prompts/zh/ and overwrite every file
+with the minimal version, DESTROYING the hand-written content.
+
+This script is kept ONLY as a legacy bootstrap for generating brand-new Loops
+from scratch. To protect the existing files, main() refuses to run unless the
+environment variable LOOPS_REGENERATE=1 is set.
+=====================================
 """
 
 import os
+import sys
 
 # Category translations
 CATEGORY_ZH = {
@@ -1501,7 +1517,7 @@ description: "{loop['goal_en']}"
 
 ## Recommended Agents
 
-Claude Code, Cursor, Trae
+Claude Code, Cursor, Trae, Windsurf, Cline
 """
 
 def generate_zh_markdown(loop):
@@ -1536,11 +1552,26 @@ description: "{loop['goal_zh']}"
 
 ## 推荐代理
 
-Claude Code、Cursor、Trae
+Claude Code、Cursor、Trae、Windsurf、Cline
 """
 
 def main():
-    script_dir = "/Users/jwangkun/Coding/loops"
+    # Safety guard: this script regenerates the OLD 5-section minimal structure
+    # and would OVERWRITE the hand-enhanced 8-section files in prompts/.
+    # Require an explicit opt-in env var to proceed. See module docstring.
+    if os.environ.get("LOOPS_REGENERATE") != "1":
+        print(
+            "⛔ Refusing to run: prompts/zh and prompts/en contain hand-enhanced\n"
+            "   8-section files. This script would overwrite them with the old\n"
+            "   5-section minimal structure.\n\n"
+            "   This script is kept only as a legacy bootstrap for brand-new Loops.\n"
+            "   To proceed anyway (DESTRUCTIVE), run:\n"
+            "       LOOPS_REGENERATE=1 python3 generate_all_prompts.py",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    script_dir = os.path.dirname(os.path.abspath(__file__))
     en_dir = os.path.join(script_dir, "prompts", "en")
     zh_dir = os.path.join(script_dir, "prompts", "zh")
 

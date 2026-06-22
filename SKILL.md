@@ -33,40 +33,54 @@ Loops 是一种用于 AI 编程助手（如 Claude Code、Cursor、Trae、Windsu
 
 ## 1. 安装 Skill
 
-> **默认推荐全局安装**。先把 Loops 放到 `~/.loops`，这样所有项目、所有 Agent 都能引用。只有需要项目隔离时，才按项目安装。
+> **默认推荐全局安装**。先把 Loops 装到全局位置，这样所有项目都能调用；只有需要项目隔离时，才按项目安装。
 >
-> 不同 Agent 的全局安装方式不同，请按你使用的 Agent 选择对应小节。
+> 全局安装路径建议：`~/.claude/skills/loops`（Claude Code）、`~/.trae/skills/loops`（Trae）、`~/.loops`（通用，配合软链接）。
+>
+> ⚠️ **命名冲突提示**：Claude Code 自带一个内置 `/loop` skill。本仓库**统一用 `/loops <name>`（复数）调用**，避免误触发内置的那个。详见 [§2.1](#21-claude-code)。
 
 ### 1.1 Claude Code 安装（推荐，全局可用）
 
-Claude Code 通过 `--system-prompt` 启动参数加载 `SKILL.md` 作为系统提示词，整个会话都能识别 Loops。推荐把 Loops 放在 `~/.loops`。
+Claude Code 原生支持基于目录的 Skill 自动发现。把 `SKILL.md` 放进 `~/.claude/skills/loops/` 后，启动 `claude` 即自动加载，无需任何启动参数。
 
-**全局安装**
+**方法 A：克隆到 skill 目录（推荐，自动发现）**
 
 ```bash
-# 1. 克隆 Loops 到全局位置
-git clone https://github.com/jwangkun/loops.git ~/.loops
+# 1. 克隆到 Claude Code 个人 skill 目录
+git clone https://github.com/jwangkun/loops.git ~/.claude/skills/loops
 
-# 2. 用 system prompt 启动 Claude Code
-claude --system-prompt ~/.loops/SKILL.md
+# 2. 启动 Claude Code（无需 --system-prompt）
+claude
 
-# 3. 使用任意 Loop
-/loop test-until-green
+# 3. 调用任意 Loop
+/loops test-until-green
 ```
 
-**为单个 Loop 启动临时会话**
+**方法 B：克隆到通用位置 + 软链接（多 Agent 共用）**
 
 ```bash
+git clone https://github.com/jwangkun/loops.git ~/.loops
+ln -s ~/.loops ~/.claude/skills/loops   # macOS/Linux
+# Windows 下用复制代替：xcopy /E /I %USERPROFILE%\.loops %USERPROFILE%\.claude\skills\loops
+```
+
+**方法 C：`--system-prompt` 变通法（临时会话或旧版 Claude Code）**
+
+```bash
+# 整个 Skill
+claude --system-prompt ~/.loops/SKILL.md
+
+# 或只为单个 Loop 启动临时会话
 claude --system-prompt ~/.loops/prompts/zh/test-until-green.md
 ```
 
-**已在运行中的 Claude Code 会话**
+**方法 D：粘贴到已在运行的会话**
 
-如果你已经启动了 `claude` 但没加 `--system-prompt`，可以直接把 `~/.loops/SKILL.md` 的内容粘贴进对话，然后继续使用 `/loop <name>`。
+如果 `claude` 已经在运行但没自动加载 skill，可直接把 `SKILL.md` 内容粘贴进对话：
 
 ```bash
-cat ~/.loops/SKILL.md | pbcopy
-# 在 Claude Code 中粘贴即可
+cat ~/.loops/SKILL.md | pbcopy    # macOS；Linux 用 xclip -sel c；Windows 用 clip
+# 在 Claude Code 中粘贴即可，然后使用 /loops <name>
 ```
 
 ### 1.2 Trae IDE 安装（全局 Skill）
@@ -86,64 +100,109 @@ cp -r ~/.loops/prompts ~/.trae/skills/loops/
 安装后在 Trae 的 AI 对话框中输入：
 
 ```
-/loop test-until-green
+/loops test-until-green
 ```
 
 或：
 
 ```
-@loops /loop test-until-green
+@loops /loops test-until-green
 ```
 
 > Trae 全局 Skill 的支持取决于版本。如果全局不生效，请改用下面的项目级安装。
 
-### 1.3 Cursor 安装（全局 `.cursorrules`）
+### 1.3 Cursor 安装（`.cursor/rules/loops.mdc`）
 
-Cursor 通过 `.cursorrules` 文件集成。把它放到用户主目录，即可对所有项目生效。
+> ⚠️ **旧版 `.cursorrules` 已被 Cursor 弃用**。新版 Cursor 使用 `.cursor/rules/*.mdc` 文件（带 YAML frontmatter），支持按 glob 匹配文件自动激活。下面是新做法。
+
+**项目级安装（推荐，Cursor 官方主推）**
 
 ```bash
-# 创建全局 .cursorrules
-cat > ~/.cursorrules << 'EOF'
-# Loops Skill 配置
-你是一名熟练使用 Loops 的 AI 开发助手。当用户要求自动化测试、CI修复、代码质量检查、内容创作、数据分析、学习管理等任务时，请先查看 `~/.loops/prompts/zh/` 目录中的对应 Loop 提示词，然后按照 Loop 的"执行→检查→修复→重复"模式执行任务。
+cd your-project
+mkdir -p .cursor/rules
+
+# 创建 loops.mdc，内容如下
+cat > .cursor/rules/loops.mdc << 'EOF'
+---
+description: Loops 自动化循环集合。当用户需要自动化测试、CI修复、代码质量、内容创作、数据分析等任务时按 Loop 模式执行。
+globs:
+  - "**/*"
+alwaysApply: false
+---
+
+# Loops Skill
+
+你是一名熟练使用 Loops 的 AI 开发助手。当用户要求自动化测试、CI修复、代码质量检查、内容创作、数据分析、学习管理等任务时，请先读取 `~/.loops/prompts/zh/` 目录中的对应 Loop 提示词，然后按照 Loop 的"执行→检查→修复→重复"模式执行任务。
+
+调用方式：`/loops <name>`（复数，避免与内置冲突）。
 
 常用 Loop：
-- 测试失败：/loop test-until-green
-- CI修复：/loop fix-ci-until-green
-- 代码质量：/loop lint-typecheck-fix
-- PR审查：/loop pr-self-review
-- TDD开发：/loop autoloop-tdd
-- 文档同步：/loop docs-sync-after-edits
-- 博客优化：/loop blog-post-until-publish
-- 数据清洗：/loop data-cleaning-loop
-- 会议纪要：/loop meeting-notes-cleaner
+- 测试失败：/loops test-until-green
+- CI修复：/loops fix-ci-until-green
+- 代码质量：/loops lint-typecheck-fix
+- PR审查：/loops pr-self-review
+- TDD开发：/loops autoloop-tdd
+- 文档同步：/loops docs-sync-after-edits
+- 博客优化：/loops blog-post-until-publish
+- 数据清洗：/loops data-cleaning-loop
+- 会议纪要：/loops meeting-notes-cleaner
 EOF
 ```
 
-> 请确保已经执行过 `git clone https://github.com/jwangkun/loops.git ~/.loops`，否则 `~/.loops/prompts/zh/` 路径不存在。
+**全局安装（对所有 Cursor 项目生效）**
 
-### 1.4 Windsurf / Cline 安装（项目级）
+Cursor 官方目前主推项目级 `.cursor/rules/`，全局规则可在用户主目录放一个 `.cursor/rules/loops.mdc`（同上内容）。若全局不生效，建议改用项目级或参考 [§2.6 直接复制提示词](#26-直接复制提示词去任意-agent)。
 
-Windsurf 和 Cline 目前按项目加载知识库文件，需要在每个项目中复制一次：
+> 请确保已执行 `git clone https://github.com/jwangkun/loops.git ~/.loops`，否则 `~/.loops/prompts/zh/` 路径不存在。
+
+### 1.4 Windsurf 安装（`.windsurfrules`）
+
+Windsurf（Codeium）读取项目根目录的 `.windsurfrules` 文件，或全局的 `~/.codeium/windsurf/global_rules.md`。
+
+**项目级安装（推荐）**
 
 ```bash
-# 先确保 Loops 在 ~/.loops
-git clone https://github.com/jwangkun/loops.git ~/.loops
+cd your-project
+cat > .windsurfrules << 'EOF'
+# Loops Skill 配置
+你是一名熟练使用 Loops 的 AI 开发助手。当用户要求自动化测试、CI修复、代码质量检查、内容创作、数据分析等任务时，请先读取 `~/.loops/prompts/zh/` 目录中的对应 Loop 提示词，然后按 Loop 的"执行→检查→修复→重复"模式执行。
 
-# Windsurf
-mkdir -p .windsurf/knowledge
-cp ~/.loops/SKILL.md .windsurf/knowledge/loops.md
-cp ~/.loops/prompts/zh/*.md .windsurf/knowledge/
-
-# Cline
-mkdir -p .cline
-cp ~/.loops/SKILL.md .cline/loops.md
-cp ~/.loops/prompts/zh/*.md .cline/
+调用方式：/loops <name>（复数，避免与 Claude Code 内置 /loop 冲突）。
+常用：/loops test-until-green、/loops fix-ci-until-green、/loops lint-typecheck-fix、/loops pr-self-review
+EOF
 ```
 
-### 1.5 项目级安装（可选）
+**全局安装（所有 Windsurf 项目）**
 
-如果你希望某个项目使用独立的 Loops 版本，可以按项目安装：
+```bash
+mkdir -p ~/.codeium/windsurf
+cat > ~/.codeium/windsurf/global_rules.md << 'EOF'
+# Loops 全局配置（同上内容）
+EOF
+```
+
+### 1.5 Cline 安装（`.clinerules`）
+
+Cline 读取项目根目录的 `.clinerules` 文件（或 `.clinerules/` 文件夹）。规则会自动追加到每次对话的系统提示。
+
+**项目级安装（推荐）**
+
+```bash
+cd your-project
+cat > .clinerules << 'EOF'
+# Loops Skill 配置
+你是一名熟练使用 Loops 的 AI 开发助手。当用户要求自动化测试、CI修复、代码质量检查、内容创作、数据分析等任务时，请先读取 `~/.loops/prompts/zh/` 目录中的对应 Loop 提示词，然后按 Loop 的"执行→检查→修复→重复"模式执行。
+
+调用方式：/loops <name>（复数，避免与 Claude Code 内置 /loop 冲突）。
+常用：/loops test-until-green、/loops fix-ci-until-green、/loops lint-typecheck-fix、/loops pr-self-review
+EOF
+```
+
+> 也可在 Cline 聊天框下方的 **Rules** 面板用 **+** 按钮新建规则，效果相同。
+
+### 1.6 项目级安装（通用）
+
+如果你希望某个项目使用独立的 Loops 版本，可按项目安装到任意 IDE 的规则目录（参考 1.2 Trae 示例）：
 
 ```bash
 cd your-project
@@ -152,13 +211,14 @@ cp ~/.loops/SKILL.md .trae/skills/loops/
 cp -r ~/.loops/prompts .trae/skills/loops/
 ```
 
-> `.trae/` 是本地 IDE 配置，不应提交到版本控制。建议将 `.trae/` 加入项目 `.gitignore`。
+> 各 IDE 的本地配置目录（`.trae/`、`.cursor/`、`.clinerules`、`.windsurfrules` 等）不应提交到版本控制，已在 `.gitignore` 中忽略。
 
-### 1.6 通过 Git 子模块安装（可选）
+### 1.7 通过 Git 子模块安装（可选）
 
 ```bash
 cd your-project
-git submodule add https://github.com/jwangkun/loops.git .trae/skills/loops
+git submodule add https://github.com/jwangkun/loops.git .loops
+# 然后按你用的 Agent 把 .loops/SKILL.md 链接到对应规则位置
 ```
 
 ---
@@ -167,67 +227,114 @@ git submodule add https://github.com/jwangkun/loops.git .trae/skills/loops
 
 ### 2.1 Claude Code
 
-用 `--system-prompt` 启动，或在对话中粘贴 `~/.loops/SKILL.md` 内容：
-
-```bash
-claude --system-prompt ~/.loops/SKILL.md
-/loop test-until-green
-```
-
-或加载后用自然语言：
+Claude Code 装到 `~/.claude/skills/loops/` 后自动发现，直接调用即可：
 
 ```
-执行测试循环，修复失败的测试
+/loops test-until-green
 ```
+
+或用自然语言：
+
+```
+请按 test-until-green 的 Loop 流程，修复当前所有失败的测试
+```
+
+> 若 `/loops xxx` 未触发本仓库的 Loop（例如仍触发 Claude Code 内置的 `/loop`），检查 `~/.claude/skills/loops/SKILL.md` 是否存在；或改用 [§2.6 直接复制提示词](#26-直接复制提示词去任意-agent)。
 
 ### 2.2 Trae
 
 Trae 会自动识别 `~/.trae/skills/loops/` 中的 Skill。在 AI 对话框中输入：
 
 ```
-/loop test-until-green
+/loops test-until-green
 ```
 
 或：
 
 ```
-@loops /loop test-until-green
+@loops /loops test-until-green
 ```
 
 也可以直接用中文：
 
 ```
-帮我运行 /loop test-until-green，修复所有失败的测试
+帮我运行 test-until-green，修复所有失败的测试
 ```
 
 ### 2.3 Cursor
 
-Cursor 会读取全局 `~/.cursorrules` 中的 Loops 配置。在 Composer 或 Chat 中：
+Cursor 会读取 `.cursor/rules/loops.mdc` 中的 Loops 配置（见 [§1.3](#13-cursor-安装cursorrulesloopsmdc)）。在 Composer 或 Chat 中：
 
 ```
-运行 test-until-green loop 修复当前测试
+运行 test-until-green 的 Loop 流程，修复当前测试
 ```
 
-### 2.4 Windsurf / Cline
+### 2.4 Windsurf
 
-Windsurf 和 Cline 按项目加载知识库。复制 `~/.loops` 中的文件到项目目录后，在 Chat 中输入：
-
-```
-/loop test-until-green
-```
-
-### 2.5 通用调用格式
+Windsurf 读取 `.windsurfrules`（见 [§1.4](#14-windsurf-安装windsurfrules)）。在 Cascade 中：
 
 ```
-/loop <loop-name> [上下文参数]
+/loops test-until-green
+```
+
+### 2.5 Cline
+
+Cline 读取 `.clinerules`（见 [§1.5](#15-cline-安装clinerules)）。在 Chat 中：
+
+```
+/loops test-until-green
+```
+
+### 2.6 直接复制提示词去任意 Agent
+
+不想装 Skill、或者用的是 ChatGPT / Claude.ai / Gemini / Copilot Chat / 通义 / 文心 等对话框？**直接把某个 Loop 的提示词全文复制进对话即可**，无需安装。三步：
+
+**第 1 步：选一个 Loop 文件**
+
+```bash
+ls ~/.loops/prompts/zh/     # 中文版（推荐）
+ls ~/.loops/prompts/en/     # 英文版
+```
+
+**第 2 步：复制全文到剪贴板**
+
+```bash
+# macOS
+cat ~/.loops/prompts/zh/test-until-green.md | pbcopy
+
+# Linux（需 xclip）
+cat ~/.loops/prompts/zh/test-until-green.md | xclip -sel c
+
+# Windows（Git Bash / WSL）
+cat ~/.loops/prompts/zh/test-until-green.md | clip.exe
+
+# 或者：直接在 GitHub / 编辑器里打开文件，Ctrl+A 全选复制
+```
+
+**第 3 步：粘贴到任意 Agent 对话框，加一句指令**
+
+```
+请严格按照下面这个 Loop 的流程执行，每完成一轮检查后把结果告诉我：
+
+（粘贴 Loop 提示词全文）
+```
+
+> 注意：纯对话框类 Agent 无法直接执行 `npm test` 等命令，需要你把命令输出贴回给它。适用于内容创作、数据分析、学习管理类不需要执行本地命令的 Loop（如 `blog-post-until-publish`、`meeting-notes-cleaner`、`prd-review-loop`）。
+
+### 2.7 通用调用格式
+
+```
+/loops <loop-name> [上下文参数]
 
 示例：
-/loop test-until-green
-/loop fix-ci-until-green
-/loop pr-self-review
-/loop data-cleaning-loop
-/loop blog-post-until-publish
+/loops test-until-green
+/loops fix-ci-until-green
+/loops pr-self-review
+/loops data-cleaning-loop
+/loops blog-post-until-publish
 ```
+
+> 本仓库统一用 **`/loops`（复数）**，避免与 Claude Code 内置的 `/loop` skill 冲突。其它 Agent（Trae/Cursor/Windsurf/Cline）同样使用 `/loops`。
 
 ---
 
@@ -240,7 +347,7 @@ Windsurf 和 Cline 按项目加载知识库。复制 `~/.loops` 中的文件到�
 3. 输入任意 Loop 命令，例如：
 
 ```
-/loop test-until-green
+/loops test-until-green
 ```
 
 4. AI 会自动：
@@ -270,7 +377,7 @@ Windsurf 和 Cline 按项目加载知识库。复制 `~/.loops` 中的文件到�
 ### 4.1 基本语法
 
 ```
-/loop <loop-slug>
+/loops <loop-slug>
 ```
 
 ### 4.2 带上下文参数
@@ -278,11 +385,11 @@ Windsurf 和 Cline 按项目加载知识库。复制 `~/.loops` 中的文件到�
 某些 Loop 支持上下文参数（Agent 会自动识别）：
 
 ```
-/loop flaky-test-triage --suite=auth.test.ts
-/loop coverage-until-threshold --threshold=85
-/loop npm-audit-fix-loop --level=high
-/loop generate-unit-tests --file=utils.ts
-/loop blog-post-until-publish --file=draft.md
+/loops flaky-test-triage --suite=auth.test.ts
+/loops coverage-until-threshold --threshold=85
+/loops npm-audit-fix-loop --level=high
+/loops generate-unit-tests --file=utils.ts
+/loops blog-post-until-publish --file=draft.md
 ```
 
 > 具体参数由 Agent 根据 Loop 描述自动推断，你也可以在提示词中明确指定。
@@ -292,7 +399,7 @@ Windsurf 和 Cline 按项目加载知识库。复制 `~/.loops` 中的文件到�
 Loop 可以串联使用：
 
 ```
-先运行 /loop lint-typecheck-fix，然后运行 /loop test-until-green
+先运行 /loops lint-typecheck-fix，然后运行 /loops test-until-green
 ```
 
 ---
@@ -556,83 +663,83 @@ Loop 可以串联使用：
 
 | 你想做什么 | 使用的 Loop | 示例 |
 |-----------|------------|------|
-| 让测试全绿 | `test-until-green` | `/loop test-until-green` |
-| 修CI失败 | `fix-ci-until-green` | `/loop fix-ci-until-green` |
-| 自动lint修复 | `lint-typecheck-fix` | `/loop lint-typecheck-fix` |
-| 自动格式化 | `format-until-clean` | `/loop format-until-clean` |
-| 审查自己的PR | `pr-self-review` | `/loop pr-self-review` |
-| 升级依赖 | `dependency-upgrade-one-by-one` | `/loop dependency-upgrade-one-by-one` |
-| 修安全漏洞 | `npm-audit-fix-loop` | `/loop npm-audit-fix-loop` |
-| TDD开发 | `autoloop-tdd` | `/loop autoloop-tdd` |
-| 更新文档 | `docs-sync-after-edits` | `/loop docs-sync-after-edits` |
-| 合并冲突 | `merge-conflict-resolver` | `/loop merge-conflict-resolver` |
-| 部署验证 | `deploy-verification-loop` | `/loop deploy-verification-loop` |
-| 优化性能 | `bundle-size-budget` | `/loop bundle-size-budget` |
-| 代码重构 | `refactor-until-clean` | `/loop refactor-until-clean` |
-| 生成单元测试 | `generate-unit-tests` | `/loop generate-unit-tests` |
-| 错误处理审计 | `error-handling-audit` | `/loop error-handling-audit` |
+| 让测试全绿 | `test-until-green` | `/loops test-until-green` |
+| 修CI失败 | `fix-ci-until-green` | `/loops fix-ci-until-green` |
+| 自动lint修复 | `lint-typecheck-fix` | `/loops lint-typecheck-fix` |
+| 自动格式化 | `format-until-clean` | `/loops format-until-clean` |
+| 审查自己的PR | `pr-self-review` | `/loops pr-self-review` |
+| 升级依赖 | `dependency-upgrade-one-by-one` | `/loops dependency-upgrade-one-by-one` |
+| 修安全漏洞 | `npm-audit-fix-loop` | `/loops npm-audit-fix-loop` |
+| TDD开发 | `autoloop-tdd` | `/loops autoloop-tdd` |
+| 更新文档 | `docs-sync-after-edits` | `/loops docs-sync-after-edits` |
+| 合并冲突 | `merge-conflict-resolver` | `/loops merge-conflict-resolver` |
+| 部署验证 | `deploy-verification-loop` | `/loops deploy-verification-loop` |
+| 优化性能 | `bundle-size-budget` | `/loops bundle-size-budget` |
+| 代码重构 | `refactor-until-clean` | `/loops refactor-until-clean` |
+| 生成单元测试 | `generate-unit-tests` | `/loops generate-unit-tests` |
+| 错误处理审计 | `error-handling-audit` | `/loops error-handling-audit` |
 
 ### 数据与AI
 
 | 你想做什么 | 使用的 Loop | 示例 |
 |-----------|------------|------|
-| 清洗数据集 | `data-cleaning-loop` | `/loop data-cleaning-loop` |
-| 训练模型 | `model-training-loop` | `/loop model-training-loop` |
-| 特征工程 | `feature-engineering-loop` | `/loop feature-engineering-loop` |
-| 运行数据管道 | `data-pipeline-until-green` | `/loop data-pipeline-until-green` |
-| 追踪实验 | `experiment-tracker` | `/loop experiment-tracker` |
-| 刷新仪表盘 | `dashboard-sync-loop` | `/loop dashboard-sync-loop` |
-| 数据库迁移 | `schema-migration-loop` | `/loop schema-migration-loop` |
-| 优化慢查询 | `query-performance-loop` | `/loop query-performance-loop` |
+| 清洗数据集 | `data-cleaning-loop` | `/loops data-cleaning-loop` |
+| 训练模型 | `model-training-loop` | `/loops model-training-loop` |
+| 特征工程 | `feature-engineering-loop` | `/loops feature-engineering-loop` |
+| 运行数据管道 | `data-pipeline-until-green` | `/loops data-pipeline-until-green` |
+| 追踪实验 | `experiment-tracker` | `/loops experiment-tracker` |
+| 刷新仪表盘 | `dashboard-sync-loop` | `/loops dashboard-sync-loop` |
+| 数据库迁移 | `schema-migration-loop` | `/loops schema-migration-loop` |
+| 优化慢查询 | `query-performance-loop` | `/loops query-performance-loop` |
 
 ### 内容创作
 
 | 你想做什么 | 使用的 Loop | 示例 |
 |-----------|------------|------|
-| 优化博客文章 | `blog-post-until-publish` | `/loop blog-post-until-publish` |
-| 改进README | `readme-improvement-loop` | `/loop readme-improvement-loop` |
-| 生成社媒帖子 | `social-post-generator` | `/loop social-post-generator` |
-| 准备Newsletter | `newsletter-until-send` | `/loop newsletter-until-send` |
-| 优化视频脚本 | `video-script-loop` | `/loop video-script-loop` |
-| 审校翻译 | `translation-review-loop` | `/loop translation-review-loop` |
-| 优化广告文案 | `ad-copy-optimizer` | `/loop ad-copy-optimizer` |
+| 优化博客文章 | `blog-post-until-publish` | `/loops blog-post-until-publish` |
+| 改进README | `readme-improvement-loop` | `/loops readme-improvement-loop` |
+| 生成社媒帖子 | `social-post-generator` | `/loops social-post-generator` |
+| 准备Newsletter | `newsletter-until-send` | `/loops newsletter-until-send` |
+| 优化视频脚本 | `video-script-loop` | `/loops video-script-loop` |
+| 审校翻译 | `translation-review-loop` | `/loops translation-review-loop` |
+| 优化广告文案 | `ad-copy-optimizer` | `/loops ad-copy-optimizer` |
 
 ### 产品与运营
 
 | 你想做什么 | 使用的 Loop | 示例 |
 |-----------|------------|------|
-| 审查PRD | `prd-review-loop` | `/loop prd-review-loop` |
-| 生成用户故事 | `user-story-generator` | `/loop user-story-generator` |
-| 设计审查 | `design-review-loop` | `/loop design-review-loop` |
-| 竞品分析 | `competitive-analysis-loop` | `/loop competitive-analysis-loop` |
-| SEO审计 | `seo-audit-loop` | `/loop seo-audit-loop` |
-| 邮件营销检查 | `email-campaign-loop` | `/loop email-campaign-loop` |
-| 发布说明 | `release-notes-generator` | `/loop release-notes-generator` |
+| 审查PRD | `prd-review-loop` | `/loops prd-review-loop` |
+| 生成用户故事 | `user-story-generator` | `/loops user-story-generator` |
+| 设计审查 | `design-review-loop` | `/loops design-review-loop` |
+| 竞品分析 | `competitive-analysis-loop` | `/loops competitive-analysis-loop` |
+| SEO审计 | `seo-audit-loop` | `/loops seo-audit-loop` |
+| 邮件营销检查 | `email-campaign-loop` | `/loops email-campaign-loop` |
+| 发布说明 | `release-notes-generator` | `/loops release-notes-generator` |
 
 ### 学习与效率
 
 | 你想做什么 | 使用的 Loop | 示例 |
 |-----------|------------|------|
-| 生成学习闪卡 | `flashcard-generator` | `/loop flashcard-generator` |
-| 优化学习计划 | `study-plan-optimizer` | `/loop study-plan-optimizer` |
-| 整理笔记 | `note-organizer` | `/loop note-organizer` |
-| 综合研究 | `research-synthesis-loop` | `/loop research-synthesis-loop` |
-| 整理会议纪要 | `meeting-notes-cleaner` | `/loop meeting-notes-cleaner` |
-| 收件箱清零 | `inbox-zero-loop` | `/loop inbox-zero-loop` |
-| 任务优先级 | `task-prioritizer` | `/loop task-prioritizer` |
-| 每周回顾 | `weekly-review-loop` | `/loop weekly-review-loop` |
+| 生成学习闪卡 | `flashcard-generator` | `/loops flashcard-generator` |
+| 优化学习计划 | `study-plan-optimizer` | `/loops study-plan-optimizer` |
+| 整理笔记 | `note-organizer` | `/loops note-organizer` |
+| 综合研究 | `research-synthesis-loop` | `/loops research-synthesis-loop` |
+| 整理会议纪要 | `meeting-notes-cleaner` | `/loops meeting-notes-cleaner` |
+| 收件箱清零 | `inbox-zero-loop` | `/loops inbox-zero-loop` |
+| 任务优先级 | `task-prioritizer` | `/loops task-prioritizer` |
+| 每周回顾 | `weekly-review-loop` | `/loops weekly-review-loop` |
 
 ### 系统与安全
 
 | 你想做什么 | 使用的 Loop | 示例 |
 |-----------|------------|------|
-| 构建Docker镜像 | `docker-build-until-green` | `/loop docker-build-until-green` |
-| 检查Terraform | `terraform-plan-until-clean` | `/loop terraform-plan-until-clean` |
-| 检测日志异常 | `log-anomaly-detector` | `/loop log-anomaly-detector` |
-| 监控SSL证书 | `ssl-certificate-monitor` | `/loop ssl-certificate-monitor` |
-| 扫描密钥泄露 | `secret-scan-loop` | `/loop secret-scan-loop` |
-| 合规检查 | `compliance-checklist-loop` | `/loop compliance-checklist-loop` |
-| 审查访问权限 | `access-review-loop` | `/loop access-review-loop` |
+| 构建Docker镜像 | `docker-build-until-green` | `/loops docker-build-until-green` |
+| 检查Terraform | `terraform-plan-until-clean` | `/loops terraform-plan-until-clean` |
+| 检测日志异常 | `log-anomaly-detector` | `/loops log-anomaly-detector` |
+| 监控SSL证书 | `ssl-certificate-monitor` | `/loops ssl-certificate-monitor` |
+| 扫描密钥泄露 | `secret-scan-loop` | `/loops secret-scan-loop` |
+| 合规检查 | `compliance-checklist-loop` | `/loops compliance-checklist-loop` |
+| 审查访问权限 | `access-review-loop` | `/loops access-review-loop` |
 
 ---
 
@@ -667,17 +774,17 @@ Loop 可以串联使用：
 git checkout -b feature/new-stuff
 
 # 2. 让AI用Loop实现功能
-/loop autoloop-tdd
+/loops autoloop-tdd
 
 # 3. 用Loop自我审查
-/loop pr-self-review
+/loops pr-self-review
 
 # 4. 提交并推送
 git commit -am "feat: add new stuff"
 git push origin feature/new-stuff
 
 # 5. 确保CI通过
-/loop fix-ci-until-green
+/loops fix-ci-until-green
 ```
 
 ---
@@ -686,12 +793,16 @@ git push origin feature/new-stuff
 
 ### 8.1 Agent 不识别 Loop 命令
 
-**现象**：输入 `/loop test-until-green` 后 Agent 没有按 Loop 执行。
+**现象**：输入 `/loops test-until-green` 后 Agent 没有按 Loop 执行。
 
 **解决**：
-1. 确认 Skill 已正确安装到项目目录
-2. Claude Code 用户确认是用 `claude --system-prompt ~/.loops/SKILL.md` 启动，或已粘贴 SKILL.md 内容到对话
-3. 用自然语言描述意图，例如："请按照 test-until-green 的模式运行测试并修复"
+1. **Claude Code**：确认 `~/.claude/skills/loops/SKILL.md` 存在（官方自动发现）；或在对话中粘贴 `SKILL.md` 内容；或用 `claude --system-prompt ~/.loops/SKILL.md` 启动。
+2. **Claude Code 命名冲突**：若 `/loops xxx` 触发的是 Claude Code 内置的 `/loop` 而非本仓库，确认 skill 目录命名是 `loops`（不是 `loop`），或直接用自然语言描述需求。
+3. **Trae**：检查 `~/.trae/skills/loops/` 是否存在 `SKILL.md` 和 `prompts/`。
+4. **Cursor**：检查 `.cursor/rules/loops.mdc` 是否存在（旧版 `.cursorrules` 已废弃）。
+5. **Windsurf**：检查项目根的 `.windsurfrules` 是否存在。
+6. **Cline**：检查项目根的 `.clinerules` 是否存在。
+7. 都不行时，用 [§2.6 直接复制提示词](#26-直接复制提示词去任意-agent) 把 Loop 文件全文粘进对话框。
 
 ### 8.2 检查命令不存在
 

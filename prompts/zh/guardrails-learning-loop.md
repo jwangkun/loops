@@ -1,17 +1,21 @@
 ---
 name: "guardrails-learning-loop"
-description: "测试和lint通过且不重复之前的失败模式"
+description: "检查通过且不重蹈历史失败"
 ---
 
-# Guardrails学习循环
+# Guardrails 学习循环
 
-**分类:** Git钩子  
-**标识符:** `guardrails-learning-loop`  
+**分类:** 开发流程
+**标识符:** `guardrails-learning-loop`
 **最大迭代次数:** 5
 
 ## 目标
 
-测试和lint通过且不重复之前的失败模式
+让测试与 lint 通过，且本轮修复不引入 `guardrails.md` 中已记录的失败模式。每出现一次重复失败，都要把可复用的规则沉淀回 `guardrails.md`。
+
+## 适用场景
+
+存在 `guardrails.md` 记录历史踩坑规则，需要在修复过程中持续学习、避免重复犯错。
 
 ## 检查命令
 
@@ -21,12 +25,28 @@ npm test && npm run lint
 
 ## 退出条件
 
-检查通过且无重复失败
+- 检查命令退出码为 0，测试与 lint 全部通过。
+- 本次失败未与 `guardrails.md` 中任一已记录模式重复。
 
 ## 执行步骤
 
-Step 1: 读取guardrails.md。运行检查。如果失败重复则记录再修复。
+Step 1: 读取 `guardrails.md`，掌握已有失败模式与规避规则。
+Step 2: 运行检查命令，捕获失败信息并与历史模式比对，判断是否属于重复。
+Step 3: 实施最小修复；若是重复失败，优先采用历史规则中给出的做法而非另起炉灶。
+Step 4: 重新运行检查命令；若仍失败且未达最大迭代，将新的失败模式追加到 `guardrails.md`，回到 Step 2。
+Step 5: 达到最大迭代仍未通过时停止，报告未消除的失败与新增的 guardrails 条目，不得无限循环。
+
+## 常见陷阱
+
+- 同一类失败反复出现却从不沉淀规则，`guardrails.md` 停留在空文件或陈旧内容。
+- 用忽略/跳过错误的方式让 lint 变绿，而非真正修复。
+- 记录的规则过于笼统（如"注意空指针"），无法指导下次决策。
+
+## 注意事项
+
+- `guardrails.md` 每条规则需可执行（触发条件 + 正确做法）。
+- 不要为通过检查而禁用或降级测试与 lint 规则。
 
 ## 推荐代理
 
-Claude Code、Cursor、Trae
+Claude Code、Cursor、Trae、Windsurf、Cline

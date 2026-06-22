@@ -64,14 +64,14 @@ Visit [https://loops.elorm.xyz/loops](https://loops.elorm.xyz/loops) to browse, 
 ### Method 2: Use in Claude Code / Cursor
 
 ```
-/loop <loop-name>
+/loops <loop-name>
 ```
 
 For example:
 ```
-/loop test-until-green
-/loop fix-ci-until-green
-/loop pr-self-review
+/loops test-until-green
+/loops fix-ci-until-green
+/loops pr-self-review
 ```
 
 ### Method 3: Local Use
@@ -111,7 +111,7 @@ npm test
 Run tests, fix the smallest root cause, repeat until all tests pass.
 ```bash
 # Usage
-/loop test-until-green
+/loops test-until-green
 ```
 
 #### 2. e2e-until-green
@@ -122,7 +122,7 @@ npm run test:e2e
 Run E2E tests, fix the first failing spec, repeat until all pass.
 ```bash
 # Usage
-/loop e2e-until-green
+/loops e2e-until-green
 ```
 
 #### 3. flaky-test-triage
@@ -133,7 +133,7 @@ npm test -- --testPathPattern=<failing-suite>
 Run failing test suite multiple times, classify each failure, fix real ones, document flaky behavior.
 ```bash
 # Usage
-/loop flaky-test-triage
+/loops flaky-test-triage
 ```
 
 #### 4. visual-regression-until-match
@@ -144,7 +144,7 @@ npx playwright test --grep @visual
 Run visual tests, fix unintended UI diffs; update baselines only for deliberate design changes.
 ```bash
 # Usage
-/loop visual-regression-until-match
+/loops visual-regression-until-match
 ```
 
 #### 5. coverage-until-threshold
@@ -155,7 +155,7 @@ npm test -- --coverage
 Run coverage, add focused tests for biggest uncovered gaps, repeat until threshold is met.
 ```bash
 # Usage
-/loop coverage-until-threshold
+/loops coverage-until-threshold
 ```
 
 #### 6. staging-smoke-test
@@ -166,7 +166,7 @@ npm run smoke:staging
 Run staging smoke checklist, fix the first failing item, repeat until passing.
 ```bash
 # Usage
-/loop staging-smoke-test
+/loops staging-smoke-test
 ```
 
 #### 7. post-edit-test-guard
@@ -177,7 +177,7 @@ npm test -- --findRelatedTests <edited files>
 After edits, run related tests. If they fail, fix before making more changes.
 ```bash
 # Usage
-/loop post-edit-test-guard
+/loops post-edit-test-guard
 ```
 
 ---
@@ -192,7 +192,7 @@ gh pr checks
 Implement change, test locally, push, open PR, fix CI until all pass.
 ```bash
 # Usage
-/loop ship-pr-until-green
+/loops ship-pr-until-green
 ```
 
 #### 9. fix-ci-until-green
@@ -203,7 +203,7 @@ gh run list --branch $(git branch --show-current) --limit 1 --json conclusion -q
 Find latest failed CI run, read logs, reproduce locally, fix root cause, push, verify.
 ```bash
 # Usage
-/loop fix-ci-until-green
+/loops fix-ci-until-green
 ```
 
 #### 10. ci-failure-watcher
@@ -214,7 +214,7 @@ gh run list --branch $(git branch --show-current) --limit 1
 Check CI status, if failed read logs, fix root cause, verify locally, push if needed.
 ```bash
 # Usage
-/loop ci-failure-watcher
+/loops ci-failure-watcher
 ```
 
 #### 11. build-until-green
@@ -225,7 +225,7 @@ npm run build
 Run build, if it fails fix the first error, repeat until green.
 ```bash
 # Usage
-/loop build-until-green
+/loops build-until-green
 ```
 
 #### 12. pre-commit-guard
@@ -236,7 +236,7 @@ npm test
 Before any git commit, run tests, fix failures before committing.
 ```bash
 # Usage
-/loop pre-commit-guard
+/loops pre-commit-guard
 ```
 
 #### 13. pr-self-review
@@ -247,7 +247,7 @@ git diff main...HEAD
 Review the diff like a senior reviewer, fix findings, then re-review.
 ```bash
 # Usage
-/loop pr-self-review
+/loops pr-self-review
 ```
 
 #### 14. pr-babysitter
@@ -258,7 +258,7 @@ gh pr list --label "codex-watch"
 List watched PRs, fix CI once, rebase if behind, comment if stale. Escalate repeated failures.
 ```bash
 # Usage
-/loop pr-babysitter
+/loops pr-babysitter
 ```
 
 #### 15. pr-watch-loop
@@ -269,7 +269,7 @@ gh pr list --label codex-watch --json number,title,state,statusCheckRollup
 List codex-watch PRs, check CI and reviews, report or fix trivial blockers.
 ```bash
 # Usage
-/loop pr-watch-loop
+/loops pr-watch-loop
 ```
 
 #### 16. spec-first-ship
@@ -280,7 +280,7 @@ npm test
 Read spec.md, implement the first unchecked item, verify it, mark [x], stop this iteration.
 ```bash
 # Usage
-/loop spec-first-ship
+/loops spec-first-ship
 ```
 
 ---
@@ -295,7 +295,7 @@ npm run lint && npx tsc --noEmit
 Run lint and typecheck, fix reported issues with minimal diffs, repeat.
 ```bash
 # Usage
-/loop lint-typecheck-fix
+/loops lint-typecheck-fix
 ```
 
 #### 18. format-until-clean
@@ -306,7 +306,7 @@ npm run format
 Run formatter, fix any issues it cannot auto-fix, repeat.
 ```bash
 # Usage
-/loop format-until-clean
+/loops format-until-clean
 ```
 
 #### 19. de-sloppify-pass
@@ -317,7 +317,7 @@ npm run lint && npm test
 Review diff for debug code, dead branches, naming issues, fix with minimal diffs.
 ```bash
 # Usage
-/loop de-sloppify-pass
+/loops de-sloppify-pass
 ```
 
 #### 20. knip-until-clean
@@ -328,7 +328,7 @@ npx knip
 Run knip, remove dead exports and unused deps with minimal diffs, verify tests still pass.
 ```bash
 # Usage
-/loop knip-until-clean
+/loops knip-until-clean
 ```
 
 ---
@@ -343,7 +343,7 @@ npm run test:contract
 Run contract tests, fix each schema/response mismatch with minimal diffs, re-run.
 ```bash
 # Usage
-/loop api-contract-until-match
+/loops api-contract-until-match
 ```
 
 #### 22. openapi-sync-until-valid
@@ -354,7 +354,7 @@ npx @redocly/cli lint openapi.yaml
 Lint openapi.yaml, fix spec errors and handler drift until lint passes.
 ```bash
 # Usage
-/loop openapi-sync-until-valid
+/loops openapi-sync-until-valid
 ```
 
 ---
@@ -369,7 +369,7 @@ npm outdated && npm test && npm run build
 Pick one outdated package, upgrade it, fix breakages, commit, stop. One package per iteration.
 ```bash
 # Usage
-/loop dependency-upgrade-one-by-one
+/loops dependency-upgrade-one-by-one
 ```
 
 #### 24. migration-until-applied
@@ -380,7 +380,7 @@ npx prisma migrate status
 Run migrations, fix schema or SQL errors, repeat until status is clean.
 ```bash
 # Usage
-/loop migration-until-applied
+/loops migration-until-applied
 ```
 
 #### 25. dependency-audit-weekly
@@ -391,7 +391,7 @@ npm outdated || true
 Run npm outdated, categorize updates, propose safe upgrade plan.
 ```bash
 # Usage
-/loop dependency-audit-weekly
+/loops dependency-audit-weekly
 ```
 
 #### 26. npm-audit-fix-loop
@@ -402,7 +402,7 @@ npm audit --audit-level=high && npm test
 Pick one high/critical advisory, apply safest fix, run tests, repeat.
 ```bash
 # Usage
-/loop npm-audit-fix-loop
+/loops npm-audit-fix-loop
 ```
 
 ---
@@ -417,7 +417,7 @@ npm audit --json
 Run npm audit, triage by severity, propose safe remediation steps.
 ```bash
 # Usage
-/loop security-audit-weekly
+/loops security-audit-weekly
 ```
 
 ---
@@ -432,7 +432,7 @@ npm test
 Write a failing test for the next behavior, implement minimum code to pass, refactor, repeat.
 ```bash
 # Usage
-/loop autoloop-tdd
+/loops autoloop-tdd
 ```
 
 #### 29. changelog-sync-after-ship
@@ -443,7 +443,7 @@ git log -5 --oneline
 Review recent commits, write Keep-a-Changelog entries for user-visible changes, verify completeness.
 ```bash
 # Usage
-/loop changelog-sync-after-ship
+/loops changelog-sync-after-ship
 ```
 
 #### 30. investigation-script-loop
@@ -454,7 +454,7 @@ node scripts/investigate.mjs
 Write a tiny throwaway script that reproduces the issue, run it, iterate on output.
 ```bash
 # Usage
-/loop investigation-script-loop
+/loops investigation-script-loop
 ```
 
 #### 31. ralph-story-executor
@@ -465,7 +465,7 @@ npm test && npm run lint && npm run build
 Read .ralph/prd.json and .ralph/progress.md, pick one incomplete story, implement it, run backpressure checks, commit, update prd.json and progress.md, stop this iteration.
 ```bash
 # Usage
-/loop ralph-story-executor
+/loops ralph-story-executor
 ```
 
 #### 32. reflexion-debug-loop
@@ -476,7 +476,7 @@ npm test -- --testNamePattern=<failing-test>
 Reproduce the bug. If it fails, append a reflection to .loops/reflexion.md before trying a new fix.
 ```bash
 # Usage
-/loop reflexion-debug-loop
+/loops reflexion-debug-loop
 ```
 
 ---
@@ -491,7 +491,7 @@ git diff main...HEAD --name-only
 Review the diff, find stale docs, update them, verify accuracy.
 ```bash
 # Usage
-/loop docs-sync-after-edits
+/loops docs-sync-after-edits
 ```
 
 ---
@@ -506,7 +506,7 @@ npm run build && npm run size-limit
 Build and measure bundle size, if over budget lazy-load or trim deps until size-limit passes.
 ```bash
 # Usage
-/loop bundle-size-budget
+/loops bundle-size-budget
 ```
 
 ---
@@ -521,7 +521,7 @@ npm run test:a11y
 Run a11y audit on changed routes, fix each violation, prioritize keyboard and screen reader issues.
 ```bash
 # Usage
-/loop a11y-audit-until-clean
+/loops a11y-audit-until-clean
 ```
 
 ---
@@ -536,7 +536,7 @@ npm test
 Rebase on main, resolve conflicts one file at a time, run tests, continue.
 ```bash
 # Usage
-/loop merge-conflict-resolver
+/loops merge-conflict-resolver
 ```
 
 #### 37. post-merge-regression-guard
@@ -547,7 +547,7 @@ npm run test:smoke
 After a merge, run smoke tests, fix regressions before continuing other work.
 ```bash
 # Usage
-/loop post-merge-regression-guard
+/loops post-merge-regression-guard
 ```
 
 ---
@@ -562,7 +562,7 @@ curl -fsS <your-health-url>
 Hit health/smoke URLs, if any fail inspect deploy logs, fix or escalate.
 ```bash
 # Usage
-/loop deploy-verification-loop
+/loops deploy-verification-loop
 ```
 
 ---
@@ -577,7 +577,7 @@ npm run build && npm run lint && npm test
 Run build, lint, and tests as a verifier. Trust only command output, not prior claims.
 ```bash
 # Usage
-/loop independent-verifier-pass
+/loops independent-verifier-pass
 ```
 
 ---
@@ -592,7 +592,7 @@ npm test && npm run lint
 Read .ralph/guardrails.md, run checks, if a failure repeats add a sign before fixing.
 ```bash
 # Usage
-/loop guardrails-learning-loop
+/loops guardrails-learning-loop
 ```
 
 ---
@@ -647,29 +647,94 @@ Step 3: Repeat until no changes.
 
 ## Installation and Usage
 
+> ⚠️ **Naming collision**: Claude Code ships a built-in `/loop` skill. This repo **uses `/loops <name>` (plural)** for invocation to avoid triggering the built-in one. Other agents (Trae/Cursor/Windsurf/Cline) use `/loops` too.
+
 ### Install as a Skill
 
-Copy `SKILL.md` and the `prompts/` directory into your project's Trae Skill location:
+**Claude Code (recommended, auto-discovered)** — clone into the personal skills directory:
+
+```bash
+git clone https://github.com/jwangkun/loops.git ~/.claude/skills/loops
+claude
+/loops test-until-green
+```
+
+Fallbacks for an already-running session: paste `~/.loops/SKILL.md` into the chat, or start with `claude --system-prompt ~/.loops/SKILL.md`.
+
+**Trae IDE (global Skill)**:
+
+```bash
+git clone https://github.com/jwangkun/loops.git ~/.loops
+mkdir -p ~/.trae/skills/loops
+cp ~/.loops/SKILL.md ~/.trae/skills/loops/
+cp -r ~/.loops/prompts ~/.trae/skills/loops/
+```
+
+**Cursor (`.cursor/rules/loops.mdc`)** — the legacy `.cursorrules` file is **deprecated**; modern Cursor uses `.mdc` rule files:
+
+```bash
+cd your-project && mkdir -p .cursor/rules
+cat > .cursor/rules/loops.mdc << 'EOF'
+---
+description: Loops automation collection. Run tasks in an "execute → check → fix → repeat" loop.
+globs: ["**/*"]
+alwaysApply: false
+---
+You are an AI assistant skilled with Loops. Invoke with `/loops <name>`.
+Common: /loops test-until-green, /loops fix-ci-until-green, /loops lint-typecheck-fix, /loops pr-self-review
+EOF
+```
+
+**Windsurf (`.windsurfrules`)** — create `.windsurfrules` in your project root (or `~/.codeium/windsurf/global_rules.md` for global).
+
+**Cline (`.clinerules`)** — create `.clinerules` in your project root, or use the **Rules** panel's **+** button.
+
+**Project-level (any IDE)**:
 
 ```bash
 cd your-project
 mkdir -p .trae/skills/loops
-cp /path/to/loops/SKILL.md .trae/skills/loops/
-cp -r /path/to/loops/prompts .trae/skills/loops/
+cp ~/.loops/SKILL.md .trae/skills/loops/
+cp -r ~/.loops/prompts .trae/skills/loops/
 ```
 
-> Note: The `.trae/` directory is local IDE configuration and should not be committed to version control.
+> Local IDE config dirs (`.trae/`, `.cursor/`, `.clinerules`, `.windsurfrules`) should not be committed; they are listed in `.gitignore`.
 
 ### Use Individual Loops
 
 ```bash
 # In Claude Code
-/load /path/to/loops/SKILL.md
-/loop test-until-green
+/loops test-until-green
 
-# In Cursor
-@loop test-until-green
+# In Trae
+@loops /loops test-until-green
+
+# Natural language works everywhere
+Fix the failing tests using the test-until-green loop flow
 ```
+
+### Paste a Loop into any Agent
+
+Don't want to install a Skill, or using ChatGPT / Claude.ai / Gemini / Copilot Chat / any chat box? **Just copy a Loop's full prompt into the chat** — no installation needed.
+
+```bash
+# Step 1: pick a Loop file
+ls ~/.loops/prompts/en/
+
+# Step 2: copy it to the clipboard
+cat ~/.loops/prompts/en/test-until-green.md | pbcopy   # macOS
+# Linux: ... | xclip -sel c    ·    Windows: ... | clip.exe
+
+# Step 3: paste into any chat box, prefixed with an instruction
+```
+
+```
+Please run through the Loop below strictly, reporting each check's result after every iteration:
+
+(paste the Loop prompt here)
+```
+
+> Note: pure chat agents can't run `npm test` directly — you'll paste command output back to them. Best for content/data/learning Loops (e.g. `blog-post-until-publish`, `meeting-notes-cleaner`, `prd-review-loop`).
 
 ---
 

@@ -104,7 +104,7 @@
 
 Claude Code 原生支持 Skill：把仓库放到 `~/.claude/skills/loops/` 即可被自动发现，无需手动加载。
 
-> ⚠️ **命名冲突提示**：Claude Code 自带一个内置 `/loop` skill。为避免误触发内置那个，**本仓库统一使用 `/loops <name>`（复数）调用**。如果你输入 `/loop xxx` 后发现触发的是内置的而不是本仓库的，请改用 `/loops xxx`，或直接用自然语言描述（见 [§5.6 直接复制提示词去任意 Agent](#56-直接复制提示词去任意-agent)）。
+> ⚠️ **命名冲突提示**：Claude Code 自带一个内置 `/loop` skill。为避免误触发内置那个，**本仓库统一使用 `/loops <name>`（复数）调用**。如果你输入 `/loop xxx` 后发现触发的是内置的而不是本仓库的，请改用 `/loops xxx`，或直接用自然语言描述（见 [§5.7 直接复制提示词去任意 Agent](#57-直接复制提示词去任意-agent)）。
 
 ### 第 1 步：全局安装 Loops
 
@@ -144,7 +144,7 @@ AI 会告诉你每一步的操作结果，你只需在必要时介入。
 
 > **推荐原则**：先把 Loops 装到全局位置，这样所有项目都能调用；只有需要项目隔离时，才按项目安装。
 >
-> 全局安装路径建议：`~/.claude/skills/loops`（Claude Code）、`~/.trae/skills/loops`（Trae）、`~/.loops`（通用，配合软链接）。
+> 全局安装路径建议：`~/.claude/skills/loops`（Claude Code）、`~/.trae/skills/loops`（Trae）、`~/.codex/AGENTS.md`（Codex）、`~/.loops`（通用，配合软链接）。
 
 ### 4.1 Claude Code（推荐，全局可用）
 
@@ -262,7 +262,7 @@ EOF
 
 **全局安装（对所有 Cursor 项目生效）**
 
-Cursor 官方目前主推项目级 `.cursor/rules/`，全局规则可在用户主目录放一个 `.cursor/rules/loops.mdc`（同上内容）。若全局不生效，建议改用项目级或参考 [§5.6 直接复制提示词](#56-直接复制提示词去任意-agent)。
+Cursor 官方目前主推项目级 `.cursor/rules/`，全局规则可在用户主目录放一个 `.cursor/rules/loops.mdc`（同上内容）。若全局不生效，建议改用项目级或参考 [§5.7 直接复制提示词](#57-直接复制提示词去任意-agent)。
 
 > 请确保已执行 `git clone https://github.com/jwangkun/loops.git ~/.loops`，否则 `~/.loops/prompts/zh/` 路径不存在。
 
@@ -311,7 +311,48 @@ EOF
 
 > 也可在 Cline 聊天框下方的 **Rules** 面板用 **+** 按钮新建规则，效果相同。
 
-### 4.6 项目级安装（通用）
+### 4.6 Codex（`AGENTS.md`）
+
+OpenAI Codex（CLI / IDE 扩展 / Cloud）通过 **`AGENTS.md`** 文件读取指令——开始任何工作前会先读取它。Codex **没有 `/loops` 这类斜杠命令**，调用方式是**自然语言 + 引用 Loop 名称**。它按「全局 → 项目根 → 当前目录」的顺序加载，后者覆盖前者。
+
+**全局安装（所有 Codex 项目，推荐）**
+
+```bash
+mkdir -p ~/.codex
+cat > ~/.codex/AGENTS.md << 'EOF'
+# Loops Skill（全局配置）
+
+你是一名熟练使用 Loops 的 AI 开发助手。当用户要求自动化测试、CI修复、代码质量检查、内容创作、数据分析、学习管理等任务时，请先读取 `~/.loops/prompts/zh/` 目录中的对应 Loop 提示词，然后严格按 Loop 的"执行→检查→修复→重复"模式执行任务。
+
+常用 Loop（按需选用，名称即提示词文件名）：
+- test-until-green：修复失败测试直到全绿
+- fix-ci-until-green：修复当前分支 CI
+- lint-typecheck-fix：lint + typecheck 干净
+- pr-self-review：对当前 diff 做三轮自我审查
+- autoloop-tdd：测试优先地实现目标行为
+- docs-sync-after-edits：文档与代码变更同步
+EOF
+```
+
+**项目级安装（推荐用于团队共享）**
+
+```bash
+cd your-project
+cat > AGENTS.md << 'EOF'
+# Loops Skill（项目配置）
+
+本项目使用 Loops 自动化循环。任务执行前先读取 `~/.loops/prompts/zh/<loop-name>.md`（或仓库内的 `prompts/zh/`），按其"执行→检查→修复→重复"流程执行。
+
+常用：test-until-green、fix-ci-until-green、lint-typecheck-fix、pr-self-review。
+检查命令、退出条件、最大迭代次数以各 Loop 文件为准。
+EOF
+```
+
+> Codex 也会自动发现仓库根目录的 `AGENTS.md`，适合放进版本控制让团队共用。`AGENTS.override.md`（子目录）可覆盖上层规则。
+>
+> Codex 原生契合 Loop：本仓库的 `pr-babysitter`、`pr-watch-loop` 就是针对 Codex 的 PR 看护场景设计的（使用 `codex-watch` 标签）。
+
+### 4.7 项目级安装（通用）
 
 如果你希望某个项目使用独立的 Loops 版本，可按项目安装到任意 IDE 的规则目录（参考 4.2 Trae 示例）：
 
@@ -324,7 +365,7 @@ cp -r ~/.loops/prompts .trae/skills/loops/
 
 > 各 IDE 的本地配置目录（`.trae/`、`.cursor/`、`.clinerules`、`.windsurfrules` 等）不应提交到版本控制，已在 `.gitignore` 中忽略。
 
-### 4.7 通过 Git 子模块安装（可选）
+### 4.8 通过 Git 子模块安装（可选）
 
 ```bash
 cd your-project
@@ -358,7 +399,7 @@ Claude Code 装到 `~/.claude/skills/loops/` 后自动发现，直接调用即�
 请按 test-until-green 的 Loop 流程，修复当前所有失败的测试
 ```
 
-> 若 `/loops xxx` 未触发本仓库的 Loop（例如仍触发内置的 `/loop`），检查 `~/.claude/skills/loops/SKILL.md` 是否存在；或改用 [§5.6 直接复制提示词](#56-直接复制提示词去任意-agent)。
+> 若 `/loops xxx` 未触发本仓库的 Loop（例如仍触发内置的 `/loop`），检查 `~/.claude/skills/loops/SKILL.md` 是否存在；或改用 [§5.7 直接复制提示词](#57-直接复制提示词去任意-agent)。
 
 ### 5.3 Trae
 
@@ -380,7 +421,23 @@ Claude Code 装到 `~/.claude/skills/loops/` 后自动发现，直接调用即�
 
 Cursor 会读取 `.cursor/rules/loops.mdc` 中的配置并执行（见 [§4.3](#43-cursor-cursorrulesloopsmdc)）。
 
-### 5.5 自然语言调用
+### 5.5 Codex
+
+Codex **没有斜杠命令**，全部用自然语言调用。配置好 `~/.codex/AGENTS.md` 或项目根的 `AGENTS.md` 后（见 [§4.6](#46-codexagentsmd)），在 Codex CLI / IDE 扩展 / Cloud 里直接说需求并点 Loop 名：
+
+```
+请按 test-until-green 这个 Loop 的流程，运行 npm test，修复所有失败用例直到全绿。
+```
+
+或更简洁：
+
+```
+用 fix-ci-until-green 修复当前分支的 CI 失败。
+```
+
+> Codex 会从 `AGENTS.md` 知道去哪里读 Loop 提示词（`~/.loops/prompts/zh/`）。本仓库的 `pr-babysitter`、`pr-watch-loop` 就是为 Codex 的 PR 看护场景设计的。
+
+### 5.6 自然语言调用
 
 如果你记不住 Loop 名称，可以直接描述需求：
 
@@ -390,7 +447,7 @@ Cursor 会读取 `.cursor/rules/loops.mdc` 中的配置并执行（见 [§4.3](#
 
 AI 助手会根据你的需求自动匹配最合适的 Loop。
 
-### 5.6 直接复制提示词去任意 Agent
+### 5.7 直接复制提示词去任意 Agent
 
 不想装 Skill、或者用的是 ChatGPT / Claude.ai / Gemini / Copilot Chat / 通义 / 文心 等对话框？**直接把某个 Loop 的提示词全文复制进对话即可**，无需安装。三步：
 
@@ -436,7 +493,7 @@ cat ~/.loops/prompts/zh/test-until-green.md | clip.exe
 
 > 注意：纯对话框类 Agent 无法直接执行 `npm test` 等命令，需要你把命令输出贴回给它。适用于内容创作、数据分析、学习管理类不需要执行本地命令的 Loop（如 `blog-post-until-publish`、`meeting-notes-cleaner`、`prd-review-loop`）。
 
-### 5.7 组合使用
+### 5.8 组合使用
 
 ```
 先运行 /loops lint-typecheck-fix，然后运行 /loops test-until-green
@@ -937,6 +994,7 @@ unzip loops.zip
 | AI 助手 | 支持情况 | 安装方式 |
 |--------|---------|---------|
 | Claude Code | 完全支持 | 见第 4 节 |
+| Codex | 完全支持（AGENTS.md，无斜杠命令） | 见第 4 节 |
 | Trae | 完全支持 | 见第 4 节 |
 | Cursor | 完全支持 | 见第 4 节 |
 | Windsurf | 支持 | 见第 4 节 |
@@ -955,7 +1013,8 @@ A1: 尝试以下方法：
 4. **Cursor**：检查 `.cursor/rules/loops.mdc` 是否存在（旧版 `.cursorrules` 已废弃）。
 5. **Windsurf**：检查项目根的 `.windsurfrules` 是否存在。
 6. **Cline**：检查项目根的 `.clinerules` 是否存在。
-7. 都不行时，用 [§5.6 直接复制提示词](#56-直接复制提示词去任意-agent) 把 Loop 文件全文粘进对话框。
+7. **Codex**：检查 `~/.codex/AGENTS.md` 或项目根的 `AGENTS.md` 是否配置了 Loops（Codex 用自然语言调用，无斜杠命令）。
+8. 都不行时，用 [§5.7 直接复制提示词](#57-直接复制提示词去任意-agent) 把 Loop 文件全文粘进对话框。
 
 ### Q2: 检查命令不存在怎么办？
 

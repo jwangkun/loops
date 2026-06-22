@@ -689,6 +689,21 @@ EOF
 
 **Cline (`.clinerules`)** — create `.clinerules` in your project root, or use the **Rules** panel's **+** button.
 
+**Codex (`AGENTS.md`)** — OpenAI Codex (CLI / IDE extension / Cloud) reads an `AGENTS.md` file before doing any work. It has **no slash commands** — you invoke Loops via natural language. Global rules live at `~/.codex/AGENTS.md`:
+
+```bash
+mkdir -p ~/.codex
+cat > ~/.codex/AGENTS.md << 'EOF'
+# Loops Skill (global)
+
+You are an AI assistant skilled with Loops. When asked to automate tests, CI fixes, code quality, content, data, or learning tasks, first read the matching prompt at `~/.loops/prompts/en/<loop-name>.md`, then run it strictly in the "execute → check → fix → repeat" loop.
+
+Common: test-until-green, fix-ci-until-green, lint-typecheck-fix, pr-self-review, autoloop-tdd
+EOF
+```
+
+For team-shared rules, commit an `AGENTS.md` at your repo root (Codex auto-discovers it). The `pr-babysitter` and `pr-watch-loop` loops are designed for Codex's PR-watching workflow (they use the `codex-watch` label).
+
 **Project-level (any IDE)**:
 
 ```bash
@@ -708,6 +723,9 @@ cp -r ~/.loops/prompts .trae/skills/loops/
 
 # In Trae
 @loops /loops test-until-green
+
+# In Codex (no slash command — natural language only)
+Run npm test and fix every failing case following the test-until-green loop until green.
 
 # Natural language works everywhere
 Fix the failing tests using the test-until-green loop flow

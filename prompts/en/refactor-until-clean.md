@@ -52,6 +52,10 @@ Step 5: If 10 iterations are reached, or tests go red and cannot be fixed within
 - Before any refactor, confirm the path is covered by tests; if not, add tests first.
 - Do not suppress rules just to pass lint; fix properly.
 
+- Convergence guard — if the same check fails with the same root cause on two consecutive iterations, change your approach or stop and escalate rather than retrying identically.
+- Budget discipline — respect the host harness's token, cost, and wall-clock budget; treat budget exhaustion as a stop-and-report event, never a signal to retry.
+- Terminal states — a loop ends in success, blocked, or exhausted. A stalled run or an exhausted budget is never reported as success.
+
 ## Recommended Agents
 
 Claude Code, Cursor, Trae, Windsurf, Cline

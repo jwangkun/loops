@@ -64,14 +64,16 @@ ln -s ~/.loops ~/.claude/skills/loops   # macOS/Linux
 # Windows 下用复制代替：xcopy /E /I %USERPROFILE%\.loops %USERPROFILE%\.claude\skills\loops
 ```
 
-**方法 C：`--system-prompt` 变通法（临时会话或旧版 Claude Code）**
+**方法 C：用 `--append-system-prompt` 在启动时注入（已运行的会话用方法 D 粘贴）**
+
+> ⚠️ `claude --system-prompt <文件>` 是错误写法：`--system-prompt` 接受字面文本且会完全替换默认系统提示，读取文件的 `--system-prompt-file` 仅支持 `-p` 打印模式。临时会话请用 `--append-system-prompt` 追加内容：
 
 ```bash
-# 整个 Skill
-claude --system-prompt ~/.loops/SKILL.md
+# 整个 Skill（保留默认能力，仅追加 Loops 指令）
+claude --append-system-prompt "$(cat ~/.loops/SKILL.md)"
 
 # 或只为单个 Loop 启动临时会话
-claude --system-prompt ~/.loops/prompts/zh/test-until-green.md
+claude --append-system-prompt "$(cat ~/.loops/prompts/zh/test-until-green.md)"
 ```
 
 **方法 D：粘贴到已在运行的会话**
@@ -155,11 +157,30 @@ Cursor 官方目前主推项目级 `.cursor/rules/`，全局规则可在用户�
 
 > 请确保已执行 `git clone https://github.com/jwangkun/loops.git ~/.loops`，否则 `~/.loops/prompts/zh/` 路径不存在。
 
-### 1.4 Windsurf 安装（`.windsurfrules`）
+### 1.4 Windsurf 安装（`.windsurf/rules/` 或 `.windsurfrules`）
 
-Windsurf（Codeium）读取项目根目录的 `.windsurfrules` 文件，或全局的 `~/.codeium/windsurf/global_rules.md`。
+Windsurf（Codeium）读取项目里的规则文件。新版用目录 `.windsurf/rules/*.md`（带 YAML frontmatter，支持 `always_on` / `model_decision` / `glob` / `manual` 四种激活模式）；旧版 `.windsurfrules`（项目根）仍被兼容。全局规则放在 `~/.codeium/windsurf/memories/global_rules.md`（注意中间有 `memories/` 目录，单文件约 6000 字符上限）。
 
-**项目级安装（推荐）**
+**项目级安装 —— 方式 A：新版 `.windsurf/rules/`（推荐）**
+
+```bash
+cd your-project
+mkdir -p .windsurf/rules
+cat > .windsurf/rules/loops.md << 'EOF'
+---
+description: Loops 自动化循环集合。当用户需要自动化测试、CI修复、代码质量、内容创作、数据分析等任务时按 Loop 模式执行。
+trigger: model_decision
+---
+
+# Loops Skill 配置
+你是一名熟练使用 Loops 的 AI 开发助手。当用户要求自动化测试、CI修复、代码质量检查、内容创作、数据分析等任务时，请先读取 `~/.loops/prompts/zh/` 目录中的对应 Loop 提示词，然后按 Loop 的"执行→检查→修复→重复"模式执行。
+
+调用方式：/loops <name>（复数，避免与 Claude Code 内置 /loop 冲突）。
+常用：/loops test-until-green、/loops fix-ci-until-green、/loops lint-typecheck-fix、/loops pr-self-review
+EOF
+```
+
+**项目级安装 —— 方式 B：旧版 `.windsurfrules`（兼容，单文件）**
 
 ```bash
 cd your-project
@@ -175,9 +196,10 @@ EOF
 **全局安装（所有 Windsurf 项目）**
 
 ```bash
-mkdir -p ~/.codeium/windsurf
-cat > ~/.codeium/windsurf/global_rules.md << 'EOF'
+mkdir -p ~/.codeium/windsurf/memories
+cat > ~/.codeium/windsurf/memories/global_rules.md << 'EOF'
 # Loops 全局配置（同上内容）
+你是一名熟练使用 Loops 的 AI 开发助手。当用户要求自动化测试、CI修复、代码质量检查、内容创作、数据分析等任务时，请先读取 `~/.loops/prompts/zh/` 目录中的对应 Loop 提示词，然后按 Loop 的"执行→检查→修复→重复"模式执行。
 EOF
 ```
 
@@ -853,7 +875,7 @@ git push origin feature/new-stuff
 **现象**：输入 `/loops test-until-green` 后 Agent 没有按 Loop 执行。
 
 **解决**：
-1. **Claude Code**：确认 `~/.claude/skills/loops/SKILL.md` 存在（官方自动发现）；或在对话中粘贴 `SKILL.md` 内容；或用 `claude --system-prompt ~/.loops/SKILL.md` 启动。
+1. **Claude Code**：确认 `~/.claude/skills/loops/SKILL.md` 存在（官方自动发现）；或在对话中粘贴 `SKILL.md` 内容；或用 `claude --append-system-prompt "$(cat ~/.loops/SKILL.md)"` 启动。
 2. **Claude Code 命名冲突**：若 `/loops xxx` 触发的是 Claude Code 内置的 `/loop` 而非本仓库，确认 skill 目录命名是 `loops`（不是 `loop`），或直接用自然语言描述需求。
 3. **Trae**：检查 `~/.trae/skills/loops/` 是否存在 `SKILL.md` 和 `prompts/`。
 4. **Cursor**：检查 `.cursor/rules/loops.mdc` 是否存在（旧版 `.cursorrules` 已废弃）。

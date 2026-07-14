@@ -649,6 +649,23 @@ Step 3: Repeat until no changes.
 
 > ⚠️ **Naming collision**: Claude Code ships a built-in `/loop` skill. This repo **uses `/loops <name>` (plural)** for invocation to avoid triggering the built-in one. Other agents (Trae/Cursor/Windsurf/Cline) use `/loops` too.
 
+### One-command install (recommended)
+
+Don't want to copy files by hand? The repo ships `install.sh` that wires Loops into every agent at once:
+
+```bash
+git clone https://github.com/jwangkun/loops.git
+cd loops
+
+# Global agents: Claude Code / Trae (incl. China edition) / Codex / Windsurf
+./install.sh
+
+# Also write Cursor / Cline / Windsurf project-level rules into a project
+./install.sh --project /path/to/your-project
+```
+
+The script symlinks the repo to `~/.loops` (so agents read `~/.loops/prompts/en/`), creates skill symlinks for Claude Code / Trae / Trae-cn, and appends Loops instructions to Codex's `AGENTS.md` and Windsurf's `global_rules.md`. It is idempotent (a `# >>> Loops` marker prevents duplicate writes).
+
 ### Install as a Skill
 
 **Claude Code (recommended, auto-discovered)** — clone into the personal skills directory:
@@ -659,7 +676,9 @@ claude
 /loops test-until-green
 ```
 
-Fallbacks for an already-running session: paste `~/.loops/SKILL.md` into the chat, or start with `claude --system-prompt ~/.loops/SKILL.md`.
+Fallbacks for an already-running session: paste `~/.loops/SKILL.md` into the chat, or start a session with `claude --append-system-prompt "$(cat ~/.loops/SKILL.md)"`.
+
+> ⚠️ `claude --system-prompt <file>` is wrong: `--system-prompt` takes literal text and *replaces* Claude Code's default system prompt (dropping its coding-assistant behavior), and the file-reading `--system-prompt-file` is print-mode (`-p`) only. Use `--append-system-prompt` to inject the file contents while keeping the defaults.
 
 **Trae IDE (global Skill)**:
 
@@ -669,6 +688,10 @@ mkdir -p ~/.trae/skills/loops
 cp ~/.loops/SKILL.md ~/.trae/skills/loops/
 cp -r ~/.loops/prompts ~/.trae/skills/loops/
 ```
+
+> 🌏 **Trae China (`trae.cn`)**: the global directory is `~/.trae-cn/`, not `~/.trae/`. Use `~/.trae-cn/skills/loops` instead.
+>
+> 💡 Trae loads skills on demand: after installing the repo as a single `loops` skill, describe your need in natural language (e.g. "run the test-until-green loop on my tests") and Trae matches the `description` in `SKILL.md`.
 
 **Cursor (`.cursor/rules/loops.mdc`)** — the legacy `.cursorrules` file is **deprecated**; modern Cursor uses `.mdc` rule files:
 
@@ -685,7 +708,23 @@ Common: /loops test-until-green, /loops fix-ci-until-green, /loops lint-typechec
 EOF
 ```
 
-**Windsurf (`.windsurfrules`)** — create `.windsurfrules` in your project root (or `~/.codeium/windsurf/global_rules.md` for global).
+**Windsurf** — modern Windsurf reads `.windsurf/rules/*.md` (with YAML frontmatter; four activation modes: `always_on` / `model_decision` / `glob` / `manual`), while the legacy `.windsurfrules` at the project root is still supported. Global rules live at `~/.codeium/windsurf/memories/global_rules.md` (note the `memories/` segment; ~6000-char per-file limit).
+
+Project-level (new `.windsurf/rules/`):
+
+```bash
+cd your-project && mkdir -p .windsurf/rules
+cat > .windsurf/rules/loops.md << 'EOF'
+---
+description: Loops automation collection. Run tasks in an "execute → check → fix → repeat" loop.
+trigger: model_decision
+---
+You are an AI assistant skilled with Loops. Invoke with `/loops <name>`.
+Common: /loops test-until-green, /loops fix-ci-until-green, /loops lint-typecheck-fix, /loops pr-self-review
+EOF
+```
+
+Or the legacy single-file `.windsurfrules` in your project root.
 
 **Cline (`.clinerules`)** — create `.clinerules` in your project root, or use the **Rules** panel's **+** button.
 

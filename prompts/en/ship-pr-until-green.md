@@ -50,6 +50,10 @@ Step 5: If max iterations are reached with checks still failing, stop and report
 - Keep each push focused on one root-cause fix so the commit history stays clear and reviewable.
 - Follow the repo's merge convention (squash/rebase/merge); do not rewrite commits others have already reviewed.
 
+- Convergence guard — if the same check fails with the same root cause on two consecutive iterations, change your approach or stop and escalate rather than retrying identically.
+- Budget discipline — respect the host harness's token, cost, and wall-clock budget; treat budget exhaustion as a stop-and-report event, never a signal to retry.
+- Terminal states — a loop ends in success, blocked, or exhausted. A stalled run or an exhausted budget is never reported as success.
+
 ## Recommended Agents
 
 Claude Code, Cursor, Trae, Windsurf, Cline

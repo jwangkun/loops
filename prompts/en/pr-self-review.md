@@ -49,5 +49,9 @@ Step 6: If 6 iterations are reached with unresolved issues, stop and list the re
 - Fixes must be real fixes; never comment out failing tests or delete assertions to "pass."
 - Flag breaking changes and security fixes explicitly in the description; do not hide them inside the diff.
 
+- Convergence guard — if the same check fails with the same root cause on two consecutive iterations, change your approach or stop and escalate rather than retrying identically.
+- Budget discipline — respect the host harness's token, cost, and wall-clock budget; treat budget exhaustion as a stop-and-report event, never a signal to retry.
+- Terminal states — a loop ends in success, blocked, or exhausted. A stalled run or an exhausted budget is never reported as success.
+
 ## Recommended Agents
 Claude Code, Cursor, Trae, Windsurf, Cline

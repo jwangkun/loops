@@ -50,6 +50,10 @@ Step 5: If the max iteration count is reached with gaps still remaining, stop an
 - Do not provide guidance that helps evade privacy checks or weaken user notice; the fix direction is to bring practice in line with promises, not to make promises accommodate over-collection.
 - When a fix changes policy copy, ensure all language versions are updated together to avoid inconsistency between versions.
 
+- Convergence guard — if the same check fails with the same root cause on two consecutive iterations, change your approach or stop and escalate rather than retrying identically.
+- Budget discipline — respect the host harness's token, cost, and wall-clock budget; treat budget exhaustion as a stop-and-report event, never a signal to retry.
+- Terminal states — a loop ends in success, blocked, or exhausted. A stalled run or an exhausted budget is never reported as success.
+
 ## Recommended Agents
 
 Claude Code, Cursor, Trae, Windsurf, Cline

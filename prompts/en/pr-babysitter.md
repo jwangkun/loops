@@ -50,6 +50,9 @@ Step 5: If max iterations are reached with blockers remaining, stop and report: 
 - Always run relevant checks locally before rebasing to confirm no new failures or conflicts.
 - Keep changes to other people's PRs minimal and focused; do not change their intent or merge strategy on your own.
 
+- Budget discipline — respect the host harness's token, cost, and wall-clock budget; treat budget exhaustion as a stop-and-report event, never a signal to retry.
+- Terminal states — a loop ends in success, blocked, or exhausted. A stalled run or an exhausted budget is never reported as success.
+
 ## Recommended Agents
 
 Claude Code, Cursor, Trae, Windsurf, Cline

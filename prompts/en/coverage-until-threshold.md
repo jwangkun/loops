@@ -49,6 +49,10 @@ Step 5: If max iterations are reached without success, stop and report remaining
 - Tests must cover real behavior and boundary/error paths with valid assertions.
 - Prioritize core business logic over chasing numbers on low-value code.
 
+- Convergence guard — if the same check fails with the same root cause on two consecutive iterations, change your approach or stop and escalate rather than retrying identically.
+- Budget discipline — respect the host harness's token, cost, and wall-clock budget; treat budget exhaustion as a stop-and-report event, never a signal to retry.
+- Terminal states — a loop ends in success, blocked, or exhausted. A stalled run or an exhausted budget is never reported as success.
+
 ## Recommended Agents
 
 Claude Code, Cursor, Trae, Windsurf, Cline

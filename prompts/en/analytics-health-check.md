@@ -44,5 +44,9 @@ Step 5: If max iterations are reached without passing, stop and report the remai
 - Distinguish a real gap from an intentionally retired event; retirements must be documented explicitly, never silently ignored.
 - After changing tracking, reproduce the trigger once in a real environment and confirm the network request and parameters match expectations.
 
+- Convergence guard — if the same check fails with the same root cause on two consecutive iterations, change your approach or stop and escalate rather than retrying identically.
+- Budget discipline — respect the host harness's token, cost, and wall-clock budget; treat budget exhaustion as a stop-and-report event, never a signal to retry.
+- Terminal states — a loop ends in success, blocked, or exhausted. A stalled run or an exhausted budget is never reported as success.
+
 ## Recommended Agents
 Claude Code, Cursor, Trae, Windsurf, Cline

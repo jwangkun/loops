@@ -50,6 +50,9 @@ Step 5: If max iterations are reached without success, stop and list the remaini
 - Do not temporarily downgrade dependencies or disable safety/optimization options just to pass.
 - If errors stem from environment differences such as Node version, align the environment rather than working around it.
 
+- Budget discipline — respect the host harness's token, cost, and wall-clock budget; treat budget exhaustion as a stop-and-report event, never a signal to retry.
+- Terminal states — a loop ends in success, blocked, or exhausted. A stalled run or an exhausted budget is never reported as success.
+
 ## Recommended Agents
 
 Claude Code, Cursor, Trae, Windsurf, Cline

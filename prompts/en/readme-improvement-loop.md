@@ -50,6 +50,9 @@ Step 5: If max iterations are hit without success, stop and report the remaining
 - Don't overstate capabilities or promise features still on the roadmap.
 - When editing command examples, verify they actually execute.
 
+- Budget discipline — respect the host harness's token, cost, and wall-clock budget; treat budget exhaustion as a stop-and-report event, never a signal to retry.
+- Terminal states — a loop ends in success, blocked, or exhausted. A stalled run or an exhausted budget is never reported as success.
+
 ## Recommended Agents
 
 Claude Code, Cursor, Trae, Windsurf, Cline

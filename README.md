@@ -146,6 +146,23 @@ AI 会告诉你每一步的操作结果，你只需在必要时介入。
 >
 > 全局安装路径建议：`~/.claude/skills/loops`（Claude Code）、`~/.trae/skills/loops`（Trae）、`~/.codex/AGENTS.md`（Codex）、`~/.loops`（通用，配合软链接）。
 
+### 4.0 一键安装脚本（推荐）
+
+不想逐个复制？仓库自带 `install.sh`，一条命令把 Loops 装到所有 Agent：
+
+```bash
+git clone https://github.com/jwangkun/loops.git
+cd loops
+
+# 全局 Agent：Claude Code / Trae（含国内版）/ Codex / Windsurf
+./install.sh
+
+# 再为某个项目写入 Cursor / Cline / Windsurf 的项目级规则
+./install.sh --project /path/to/your-project
+```
+
+脚本会：把仓库软链到 `~/.loops`（各 Agent 据此读取 `~/.loops/prompts/zh/`），为 Claude Code / Trae / Trae-cn 建立 Skill 软链，向 Codex 的 `AGENTS.md` 与 Windsurf 的 `global_rules.md` 追加 Loops 指令；用 `# >>> Loops` 标记做幂等判断，可重复运行不重复写入。
+
 ### 4.1 Claude Code（推荐，全局可用）
 
 Claude Code 原生支持基于目录的 Skill 自动发现。把 `SKILL.md` 放进 `~/.claude/skills/loops/` 后，启动 `claude` 即自动加载，无需任何启动参数。
@@ -173,14 +190,16 @@ ln -s ~/.loops ~/.claude/skills/loops   # macOS/Linux
 # Windows 下用复制代替：xcopy /E /I %USERPROFILE%\.loops %USERPROFILE%\.claude\skills\loops
 ```
 
-**方法 C：`--system-prompt` 变通法（临时会话或旧版 Claude Code）**
+**方法 C：用 `--append-system-prompt` 在启动时注入（已运行的会话也可用方法 D 粘贴）**
+
+> ⚠️ 注意：`claude --system-prompt <文件>` 是**错误写法**——`--system-prompt` 接受的是**字面文本**且会**完全替换** Claude Code 的默认系统提示（丢失其编程助手能力）；而读取文件的 `--system-prompt-file` 仅支持 `-p` 打印模式。因此临时会话请改用 `--append-system-prompt` 把文件内容追加进默认提示：
 
 ```bash
-# 整个 Skill
-claude --system-prompt ~/.loops/SKILL.md
+# 整个 Skill（保留 Claude Code 默认能力，仅追加 Loops 指令）
+claude --append-system-prompt "$(cat ~/.loops/SKILL.md)"
 
 # 或只为单个 Loop 启动临时会话
-claude --system-prompt ~/.loops/prompts/zh/test-until-green.md
+claude --append-system-prompt "$(cat ~/.loops/prompts/zh/test-until-green.md)"
 ```
 
 **方法 D：粘贴到已在运行的会话**
@@ -221,6 +240,10 @@ xcopy /E /I %USERPROFILE%\.loops\prompts %USERPROFILE%\.trae\skills\loops\prompt
 ```
 
 > Trae 全局 Skill 的支持取决于版本，如果全局不生效，请改用下面的项目级安装。
+
+> 🌏 **国内版 Trae（trae.cn）**：全局目录不是 `~/.trae/`，而是 `~/.trae-cn/`。请相应把上面的 `~/.trae/skills/loops` 改为 `~/.trae-cn/skills/loops`。
+
+> 💡 Trae 的 Skill 是「按需加载」的：把整个仓库作为单个 `loops` Skill 装好后，在对话框里用自然语言描述需求（如"用 test-until-green 跑一遍测试"），Trae 会自动匹配 `SKILL.md` 里的 `description` 并执行。
 
 ### 4.3 Cursor（`.cursor/rules/loops.mdc`）
 
@@ -266,11 +289,30 @@ Cursor 官方目前主推项目级 `.cursor/rules/`，全局规则可在用户�
 
 > 请确保已执行 `git clone https://github.com/jwangkun/loops.git ~/.loops`，否则 `~/.loops/prompts/zh/` 路径不存在。
 
-### 4.4 Windsurf（`.windsurfrules`）
+### 4.4 Windsurf（`.windsurf/rules/` 或 `.windsurfrules`）
 
-Windsurf（Codeium）读取项目根目录的 `.windsurfrules` 文件，或全局的 `~/.codeium/windsurf/global_rules.md`。
+Windsurf（Codeium）读取项目里的规则文件。新版用目录 `.windsurf/rules/*.md`（带 YAML frontmatter，支持 `always_on` / `model_decision` / `glob` / `manual` 四种激活模式）；旧版 `.windsurfrules`（项目根）仍被兼容。全局规则放在 `~/.codeium/windsurf/memories/global_rules.md`（注意中间有 `memories/` 目录，单文件上限约 6000 字符）。
 
-**项目级安装（推荐）**
+**项目级安装 —— 方式 A：新版 `.windsurf/rules/`（推荐）**
+
+```bash
+cd your-project
+mkdir -p .windsurf/rules
+cat > .windsurf/rules/loops.md << 'EOF'
+---
+description: Loops 自动化循环集合。当用户需要自动化测试、CI修复、代码质量、内容创作、数据分析等任务时按 Loop 模式执行。
+trigger: model_decision
+---
+
+# Loops Skill 配置
+你是一名熟练使用 Loops 的 AI 开发助手。当用户要求自动化测试、CI修复、代码质量检查、内容创作、数据分析等任务时，请先读取 `~/.loops/prompts/zh/` 目录中的对应 Loop 提示词，然后按 Loop 的"执行→检查→修复→重复"模式执行。
+
+调用方式：/loops <name>（复数，避免与 Claude Code 内置 /loop 冲突）。
+常用：/loops test-until-green、/loops fix-ci-until-green、/loops lint-typecheck-fix、/loops pr-self-review
+EOF
+```
+
+**项目级安装 —— 方式 B：旧版 `.windsurfrules`（兼容，单文件）**
 
 ```bash
 cd your-project
@@ -286,15 +328,16 @@ EOF
 **全局安装（所有 Windsurf 项目）**
 
 ```bash
-mkdir -p ~/.codeium/windsurf
-cat > ~/.codeium/windsurf/global_rules.md << 'EOF'
+mkdir -p ~/.codeium/windsurf/memories
+cat > ~/.codeium/windsurf/memories/global_rules.md << 'EOF'
 # Loops 全局配置（同上内容）
+你是一名熟练使用 Loops 的 AI 开发助手。当用户要求自动化测试、CI修复、代码质量检查、内容创作、数据分析等任务时，请先读取 `~/.loops/prompts/zh/` 目录中的对应 Loop 提示词，然后按 Loop 的"执行→检查→修复→重复"模式执行。
 EOF
 ```
 
 ### 4.5 Cline（`.clinerules`）
 
-Cline 读取项目根目录的 `.clinerules` 文件（或 `.clinerules/` 文件夹）。规则会自动追加到每次对话的系统提示。
+Cline 读取项目根目录的 `.clinerules` 文件（或 `.clinerules/` 文件夹）。规则会自动追加到每次对话的系统提示。项目级用 `.clinerules`，全局用 `~/.cline/rules/`（macOS/Linux）或 `~/Documents/Cline/Rules/`（Windows/macOS 备选）；新版 Cline 也支持把单个 Skill 放到 `.cline/skills/<name>/SKILL.md`（项目）或 `~/.cline/skills/<name>/SKILL.md`（全局）。
 
 **项目级安装（推荐）**
 
@@ -351,6 +394,8 @@ EOF
 > Codex 也会自动发现仓库根目录的 `AGENTS.md`，适合放进版本控制让团队共用。`AGENTS.override.md`（子目录）可覆盖上层规则。
 >
 > Codex 原生契合 Loop：本仓库的 `pr-babysitter`、`pr-watch-loop` 就是针对 Codex 的 PR 看护场景设计的（使用 `codex-watch` 标签）。
+
+> 🧩 **进阶：用 Codex 原生 Skill**。除 `AGENTS.md` 外，Codex 也支持真正的 Skill 目录——把每个 Loop 作为一个独立 Skill 放到用户级 `~/.agents/skills/<loop-name>/SKILL.md` 或仓库级 `.agents/skills/<loop-name>/SKILL.md`，Codex 会在需要时自动列出并加载。仓库里的 `prompts/zh|en/<loop-name>.md` 可直接作为这些 Skill 的正文。AGENTS.md 方式胜在"一处配置、整库可用"，Skill 方式胜在"可被 Codex 的 skill 选择器精确触发"，按需选择。
 
 ### 4.7 项目级安装（通用）
 
@@ -1007,7 +1052,7 @@ unzip loops.zip
 ### Q1: Agent 不识别 `/loops` 命令怎么办？
 
 A1: 尝试以下方法：
-1. **Claude Code**：确认 `~/.claude/skills/loops/SKILL.md` 存在（官方自动发现）；或在对话中粘贴 `SKILL.md` 内容；或用 `claude --system-prompt ~/.loops/SKILL.md` 启动。
+1. **Claude Code**：确认 `~/.claude/skills/loops/SKILL.md` 存在（官方自动发现）；或在对话中粘贴 `SKILL.md` 内容；或用 `claude --append-system-prompt "$(cat ~/.loops/SKILL.md)"` 启动。
 2. **Claude Code 命名冲突**：若 `/loops xxx` 触发的是 Claude Code 内置的 `/loop` 而非本仓库，确认 skill 目录命名是 `loops`（不是 `loop`），或直接用自然语言描述需求。
 3. **Trae**：检查 `~/.trae/skills/loops/` 是否存在 `SKILL.md` 和 `prompts/`。
 4. **Cursor**：检查 `.cursor/rules/loops.mdc` 是否存在（旧版 `.cursorrules` 已废弃）。

@@ -41,5 +41,8 @@ Step 5: If max iterations is hit without a clean run, stop and report remaining 
 - Be cautious with every removal: prefer keeping and reporting over deleting for the sake of a zero report.
 - If knip config needs adjusting (e.g. marking entry files), do it outside this loop and validate it.
 
+- Budget discipline — respect the host harness's token, cost, and wall-clock budget; treat budget exhaustion as a stop-and-report event, never a signal to retry.
+- Terminal states — a loop ends in success, blocked, or exhausted. A stalled run or an exhausted budget is never reported as success.
+
 ## Recommended Agents
 Claude Code, Cursor, Trae, Windsurf, Cline

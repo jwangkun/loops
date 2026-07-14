@@ -50,6 +50,10 @@ Step 5: If max iterations are hit or no more useful features remain, stop and re
 - Training and serving must share the same feature-generation code to avoid inconsistent definitions.
 - Never keep a leaking or non-deployable feature just to boost the score.
 
+- Convergence guard — if the same check fails with the same root cause on two consecutive iterations, change your approach or stop and escalate rather than retrying identically.
+- Budget discipline — respect the host harness's token, cost, and wall-clock budget; treat budget exhaustion as a stop-and-report event, never a signal to retry.
+- Terminal states — a loop ends in success, blocked, or exhausted. A stalled run or an exhausted budget is never reported as success.
+
 ## Recommended Agents
 
 Claude Code, Cursor, Trae, Windsurf, Cline

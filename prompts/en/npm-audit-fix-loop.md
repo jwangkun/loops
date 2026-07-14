@@ -50,6 +50,9 @@ Step 5: If the max iteration count is reached without a clean state, stop and re
 - Record, for every change, "why this is a genuine fix" so it can be traced during audit.
 - If no fixed version is available (the vulnerable dependency is unmaintained), report it and evaluate a replacement — do not force a downgrade or override.
 
+- Budget discipline — respect the host harness's token, cost, and wall-clock budget; treat budget exhaustion as a stop-and-report event, never a signal to retry.
+- Terminal states — a loop ends in success, blocked, or exhausted. A stalled run or an exhausted budget is never reported as success.
+
 ## Recommended Agents
 
 Claude Code, Cursor, Trae, Windsurf, Cline
